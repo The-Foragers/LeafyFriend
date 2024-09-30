@@ -14,21 +14,33 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
       }}>
+      {/* Garden Tab */}
       <Tabs.Screen
-        name="index"
+        name="garden"
         options={{
-          title: 'Home',
+          title: 'Garden',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+            <TabBarIcon name={focused ? 'leaf' : 'leaf-outline'} color={color} />
           ),
         }}
       />
+      {/* Add New Photo Tab */}
       <Tabs.Screen
-        name="explore"
+        name="addPhoto"
         options={{
-          title: 'Explore',
+          title: 'Add Photo',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
+            <TabBarIcon name={focused ? 'camera' : 'camera-outline'} color={color} />
+          ),
+        }}
+      />
+      {/* Badges Tab */}
+      <Tabs.Screen
+        name="badges"
+        options={{
+          title: 'Badges',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'medal' : 'medal-outline'} color={color} />
           ),
         }}
       />
