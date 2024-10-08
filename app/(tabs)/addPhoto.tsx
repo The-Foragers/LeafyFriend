@@ -12,9 +12,10 @@ import {
   TextInput,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Button, Provider as PaperProvider } from 'react-native-paper';
-import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
+import { Button, Provider as PaperProvider, useTheme, MD3Theme } from 'react-native-paper';
+import { useNavigation, useRoute, RouteProp, NavigationProp, Theme as NavigationTheme } from '@react-navigation/native';
 import { createTable, insertImage, getImages } from '@/app/utils/database';
+import { makeStyles } from '@/app/res/styles/addPhotoStyles'; // Import the styles
 
 // Define the type for the route parameters
 type RootStackParamList = {
@@ -35,6 +36,8 @@ type AddPhotoScreenRouteProp = RouteProp<RootStackParamList, 'addPhoto'>;
 const { width: screenWidth } = Dimensions.get('window');
 
 export default function AddPhotoScreen() {
+  const theme = useTheme();
+  const styles = makeStyles(theme);
   const [image, setImage] = useState<string | null>(null);
   const [imageHeight, setImageHeight] = useState<number>(screenWidth / 2); // Default height
   const route = useRoute<AddPhotoScreenRouteProp>(); // Use the type with the route
@@ -42,7 +45,8 @@ export default function AddPhotoScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>(); // Use navigation hook with proper type
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null); //loading message
 
-  // Automatically trigger add photo dialog if navigated with param `autoOpen`
+  //This is the code that makes the option menu open each time the screen is opened
+
 /*   useEffect(() => {
     if (route.params?.autoOpen) {
       InteractionManager.runAfterInteractions(() => {
@@ -52,6 +56,8 @@ export default function AddPhotoScreen() {
       });
     }
   }, [route.params]); */
+
+
 
   // Handle opening camera or gallery specific to platform
   //ios first
@@ -174,6 +180,10 @@ useEffect(() => {
     }
   };
 
+
+/*Screen UI
+StyleSheet is in app/res/styles/addPhotoStyles */
+
   return (
     <PaperProvider>
       <View style={styles.container}>
@@ -225,82 +235,3 @@ useEffect(() => {
     </PaperProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-    paddingTop: 100,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-    backgroundColor: '#cae8ca',
-  },
-  imageContainer: {
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    borderWidth: 0,
-    borderColor: '#ccc',
-    borderRadius: 0,
-    overflow: 'hidden',
-  },
-  previewImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
-  },
-  noImageText: {
-    fontSize: 16,
-    color: 'gray',
-  },
-  textContainer: {
-    width: '100%',
-    paddingHorizontal: 10,
-    marginBottom: 20,
-  },
-
-  //Plant text and information
-  mainText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#13250e'
-  },
-  secondaryText: {
-    fontSize: 16,
-    color: '#4c8435',
-  },
-
-  //button styles
-  saveGardenButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    backgroundColor: '#6eba70',
-    paddingHorizontal: 0,
-    flex:1,
-  },
-  addPhotoButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: '#6eba70', 
-    paddingHorizontal: 0,
-    flex: 1,
-  },
-
-// Loading message styles
-  loadingContainer: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -50 }, { translateY: -50 }],
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    padding: 10,
-    borderRadius: 5,
-  },
-  loadingText: {
-    color: 'white',
-    fontSize: 16,
-  },
-});
