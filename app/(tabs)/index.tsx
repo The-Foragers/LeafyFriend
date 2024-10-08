@@ -1,12 +1,17 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, Modal, TouchableOpacity, Alert } from 'react-native';
-import { useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
+import { useRoute, RouteProp, useFocusEffect,NavigationProp, Theme as NavigationTheme  } from '@react-navigation/native';
 import { getImages, deleteImage } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
+import { Button, Provider as PaperProvider, useTheme, MD3Theme } from 'react-native-paper';
+import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
+
 
 
 
 export default function GardenScreen() {
+  const theme = useTheme();
+  const styles = makeStyles(theme);
   const [images, setImages] = useState<{ name: string, uri: string }[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ name: string, uri: string } | null>(null);
@@ -55,11 +60,14 @@ export default function GardenScreen() {
     alert('Settings button pressed');
   };
 
+/*Screen UI
+Style sheet is in app/res/styles/gardenStyle */
   return (
     <View style={styles.container}>
       <TopBar title="My Garden" showSettings={true} onSettingsPress={handleSettingsPress} />
+      {/*<Text style={styles.heading}>My Garden</Text>*/}
+
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.heading}>My Garden</Text>
         {images.map((image, index) => (
           <TouchableOpacity key={index} onPress={() => handleImageClick(image)}>
             <View style={styles.plantContainer}>
@@ -104,73 +112,3 @@ export default function GardenScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#cae8ca',
-  },
-  scrollContainer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  heading: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#2E8B57',
-    marginBottom: 20,
-  },
-  plantContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  plantImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 10,
-  },
-  plantName: {
-    fontSize: 18,
-    color: '#333',
-  },
-  modalView: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
-  fullImage: {
-    width: '80%',
-    height: '50%',
-    resizeMode: 'contain',
-  },
-  modalText: {
-    fontSize: 18,
-    color: 'white',
-    marginTop: 20,
-  },
-  modalButtonContainer: {
-    flexDirection: 'row',
-    marginTop: 20,
-  },
-  closeButton: {
-    padding: 10,
-    backgroundColor: '#6eba70',
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  closeButtonText: {
-    color: 'white',
-    fontSize: 16,
-  },
-  deleteButton: {
-    padding: 10,
-    backgroundColor: '#ff4d4d',
-    borderRadius: 5,
-  },
-  deleteButtonText: {
-    color: 'white',
-    fontSize: 16,
-  },
-});

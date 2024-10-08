@@ -4,31 +4,39 @@ import React from 'react';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme, MD3Theme } from 'react-native-paper';
+
 
 export default function TabLayout() {
-const colorScheme = useColorScheme();
+  const theme = useTheme();
 
-  return (
-    <Tabs
-      initialRouteName="index"  
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        tabBarInactiveTintColor: '#234425', // Darker green for inactive icons
-        tabBarStyle: {
-          backgroundColor: '#e6f5e6', // Setting background color to beige
-          borderTopWidth: 1,
-          borderTopColor: '#ccc',
-          height: 70, // Slightly taller navigation bar for a more prominent look
-          paddingBottom: 20,
-          paddingTop: 5,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: 'bold',
-        },
-        headerShown: false,
-      }}
-    >
+return (
+  <Tabs
+    initialRouteName="index"
+    screenOptions={{
+      tabBarActiveTintColor: theme.colors.primary,
+      tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
+      tabBarStyle: {
+        backgroundColor: theme.colors.surface,
+        borderTopWidth: 1,
+        borderTopColor: theme.colors.outline,
+        height: 70,
+        elevation: 4, // Adds shadow on Android
+        shadowOpacity: 0.1, // Adjusts shadow on iOS
+        paddingBottom: 20,
+        paddingTop: 5,
+      },
+      tabBarLabelStyle: {
+        fontSize: 12,
+        fontWeight: 'bold',
+      },
+      headerShown: false,
+    }}
+  >
+      {/* 
+      Define the tab names and icons here.
+      icon obtained from https://ionic.io/ionicons
+      */}
 
       {/* Garden Tab */}
       <Tabs.Screen

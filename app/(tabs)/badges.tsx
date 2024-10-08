@@ -1,8 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
 import TopBar from '@/components/TopBar';
+import { Button, Provider as PaperProvider, useTheme, MD3Theme } from 'react-native-paper';
+import { makeStyles } from '@/app/res/styles/badgesStyles'; // Import the styles
 
 export default function BadgesScreen() {
+  const theme = useTheme();
+  const styles = makeStyles(theme);
+
+
   return (
     <View style={styles.container}>
       <TopBar title="Badges" />
@@ -21,33 +27,3 @@ export default function BadgesScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#cae8ca',
-  },
-  scrollContainer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#228B22',
-    marginBottom: 20,
-  },
-  badgeContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  badge: {
-    width: 100,
-    height: 100,
-    marginBottom: 10,
-  },
-  badgeText: {
-    fontSize: 16,
-    color: '#333',
-  },
-});
