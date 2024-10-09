@@ -47,6 +47,37 @@ export const makeStyles = (theme: MD3Theme) =>
       fontSize: 16,
       color: theme.colors.onBackground,
     },
+    organContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginVertical: 10,
+    },
+    organButton: {
+      padding: 10,
+      margin: 5,
+      borderRadius: 5,
+      borderWidth: 1,
+      borderColor: 'gray',
+    },
+    selectedOrganButton: {
+      backgroundColor: 'lightblue',
+    },
+    organButtonText: {
+      fontSize: 16,
+    },
+    plantItem: {
+      padding: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: '#ccc',
+    },
+    plantName: {
+      fontSize: 16,
+    },
+    plantScore: {
+      fontSize: 14,
+      color: 'gray',
+    },
   
     //button styles
     saveGardenButton: {
@@ -80,5 +111,27 @@ export const makeStyles = (theme: MD3Theme) =>
     loadingText: {
       color: 'white',
       fontSize: 16,
+    },
+    // Modal styles
+    modalView: {
+      margin: 20,
+      backgroundColor: 'white',
+      borderRadius: 20,
+      padding: 35,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    modalText: {
+      marginBottom: 15,
+      textAlign: 'center',
+      fontSize: 18,
+      fontWeight: 'bold',
     },
   });

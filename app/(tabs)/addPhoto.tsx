@@ -1,21 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  Alert,
-  Platform,
-  Dimensions,
-  ActionSheetIOS,
-  InteractionManager,
-  TextInput,
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet, Image, Alert, Dimensions, Platform, ActionSheetIOS, TouchableOpacity } from 'react-native';
+import { useRoute, RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import { Button, Provider as PaperProvider, useTheme, MD3Theme } from 'react-native-paper';
-import { useNavigation, useRoute, RouteProp, NavigationProp, Theme as NavigationTheme } from '@react-navigation/native';
-import { createTable, insertImage, getImages } from '@/app/utils/database';
+import * as ImagePicker from 'expo-image-picker';
+import { insertImage, getImages, createTable } from '@/app/utils/database';
+import { identifyPlant } from '@/scripts/Pl@ntNetAPI'; // Import the identifyPlant function
 import { makeStyles } from '@/app/res/styles/addPhotoStyles'; // Import the styles
+
 
 // Define the type for the route parameters
 type RootStackParamList = {
@@ -161,16 +152,25 @@ useEffect(() => {
     if (image && plantName) {
       try {
         // Insert the image URI into the database
-        await insertImage(plantName, image);
-        setLoadingMessage('Saving to garden...');
+        setLoadingMessage('Identifying plant...');
+        const plantInfo = await identifyPlant(image);
+        setLoadingMessage(null);
 
-        // Fetch the updated list of images
-        getImages((images) => {
-          setLoadingMessage(null);
-          setImage(null); // Clear the image from the view
-          setPlantName(''); // Clear the plant name
-          navigation.navigate('index', { images }); // Pass the updated images to the garden screen
-        });
+
+        if (plantInfo && plantInfo.results && plantInfo.results.length > 0) {
+          const apiResult = plantInfo.results[0].species.scientificNameWithoutAuthor;
+          setPlantName(plantName);
+          await insertImage(plantName, image);
+          alert(`Plant identified as ${apiResult} and saved to garden.`);
+          getImages((images) => {
+            setLoadingMessage(null);
+            setImage(null); // Clear the image from the view
+            setPlantName(''); // Clear the plant name
+            navigation.navigate('index', { images }); // Pass the updated images to the garden screen
+          });
+        } else {
+          alert('Plant could not be identified.');
+        }
       } catch (error) {
         console.error('Error saving to garden:', error);
         alert('An error occurred while saving to garden');
