@@ -1,21 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  Alert,
-  Platform,
-  Dimensions,
-  ActionSheetIOS,
-  InteractionManager,
-  TextInput,
-} from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, ScrollView, Image, Alert, Dimensions, Platform, ActionSheetIOS, TouchableOpacity, Modal } from 'react-native';
+import { useRoute, RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import { Button, Provider as PaperProvider, useTheme, MD3Theme } from 'react-native-paper';
-import { useNavigation, useRoute, RouteProp, NavigationProp, Theme as NavigationTheme } from '@react-navigation/native';
-import { createTable, insertImage, getImages } from '@/app/utils/database';
+import * as ImagePicker from 'expo-image-picker';
+import { insertImage, getImages, createTable } from '@/app/utils/database';
+import { identifyPlant } from '@/scripts/Pl@ntNetAPI'; // Import the identifyPlant function
 import { makeStyles } from '@/app/res/styles/addPhotoStyles'; // Import the styles
+
 
 // Define the type for the route parameters
 type RootStackParamList = {
@@ -42,8 +33,15 @@ export default function AddPhotoScreen() {
   const [imageHeight, setImageHeight] = useState<number>(screenWidth / 2); // Default height
   const route = useRoute<AddPhotoScreenRouteProp>(); // Use the type with the route
   const [plantName, setPlantName] = useState<string>(''); // Plant Name
+  const [plantSpecies, setPlantSpecies] = useState<string>('Unknown'); // Plant Species
+  const [selectedOrgan, setSelectedOrgan] = useState<string>('leaf'); // Default organ
+  const organs = ['Leaf', 'Flower', 'Fruit', 'Bark']; // Organ options
+  const [identificationResults, setIdentificationResults] = useState<any[]>([]); // Identification results
+  const [isResultModalVisible, setIsResultModalVisible] = useState<boolean>(false); // Result modal visibility
   const navigation = useNavigation<NavigationProp<RootStackParamList>>(); // Use navigation hook with proper type
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null); //loading message
+  const [isOrganModalVisible, setIsOrganModalVisible] = useState<boolean>(false); // Organ modal visibility
+
 
   //This is the code that makes the option menu open each time the screen is opened
 
@@ -123,6 +121,7 @@ export default function AddPhotoScreen() {
         const aspectRatio = height / width;
         setImageHeight(screenWidth * aspectRatio);
       });
+      setIsOrganModalVisible(true); // Show organ selection modal
     }
   };
 
@@ -148,20 +147,21 @@ export default function AddPhotoScreen() {
         const aspectRatio = height / width;
         setImageHeight(screenWidth * aspectRatio);
       });
+      setIsOrganModalVisible(true); // Show organ selection modal
     }
   };
 
-// Create the table when the component mounts
-useEffect(() => {
-  createTable();
-}, []);
+  // Create the table when the component mounts
+  useEffect(() => {
+    createTable();
+  }, []);
 
-// Handle Save to Garden button press
+  // Handle Save to Garden button press
   const handleSaveToGarden = async () => {
     if (image && plantName) {
       try {
         // Insert the image URI into the database
-        await insertImage(plantName, image);
+        await insertImage(plantName, image, plantSpecies);
         setLoadingMessage('Saving to garden...');
 
         // Fetch the updated list of images
@@ -169,6 +169,7 @@ useEffect(() => {
           setLoadingMessage(null);
           setImage(null); // Clear the image from the view
           setPlantName(''); // Clear the plant name
+          setPlantSpecies('Unknown'); // Clear the plant species
           navigation.navigate('index', { images }); // Pass the updated images to the garden screen
         });
       } catch (error) {
@@ -180,58 +181,137 @@ useEffect(() => {
     }
   };
 
+  const handleOrganSelect = async (organ: string) => {
+    setSelectedOrgan(organ.toLowerCase());
+    setIsOrganModalVisible(false);
+    await handleIdentifyPlant(); // Identify plant after organ selection
+    setIsResultModalVisible(true); // Show result selection modal
+  };
+
+  const handleResultSelect = (result: any) => {
+  setPlantSpecies(result.species.scientificNameWithoutAuthor);
+  setIsResultModalVisible(false);
+  };
+
+  const renderResultSelectionModal = () => (
+  <Modal
+    visible={isResultModalVisible}
+    transparent={true}
+    animationType="slide"
+    onRequestClose={() => setIsResultModalVisible(false)}
+  >
+    <View style={styles.modalContainer}>
+      <View style={styles.modalContent}>
+        <Text style={styles.modalTitle}>Select Plant Result</Text>
+        {identificationResults.map((result, index) => (
+          <TouchableOpacity key={index} onPress={() => handleResultSelect(result)}>
+              <View style={styles.resultBox}>
+                <Text style={styles.resultInfo}>
+                  {result.species.scientificNameWithoutAuthor}
+                </Text>
+                <Text style={styles.resultInfo}>
+                  ({result.species.commonNames[0] || 'No common name'})
+                </Text>
+                <Text style={styles.resultInfo}>
+                  Confidence: {(result.score * 100).toFixed(2) + '%'}
+                </Text>
+              </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  </Modal>
+  );
+
+  const handleIdentifyPlant = async () => {
+  if (image) {
+    setLoadingMessage('Identifying plant...');
+    try {
+      const results = await identifyPlant(image, selectedOrgan.toLowerCase());
+      setIdentificationResults(results.results.slice(0, 5));
+      setLoadingMessage(null);
+    } catch (error) {
+      setLoadingMessage('Failed to identify plant');
+    }
+  }};
+
+  const renderOrganSelectionModal = () => (
+  <Modal
+    visible={isOrganModalVisible}
+    transparent={true}
+    animationType="slide"
+    onRequestClose={() => setIsOrganModalVisible(false)}
+  >
+    <View style={styles.modalContainer}>
+      <View style={styles.modalContent}>
+        <Text style={styles.modalTitle}>Select Plant Organ</Text>
+        {organs.map((organ) => (
+          <TouchableOpacity key={organ} onPress={() => handleOrganSelect(organ)}>
+            <Text style={styles.modalOption}>{organ}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  </Modal>
+  );
 
 /*Screen UI
 StyleSheet is in app/res/styles/addPhotoStyles */
 
   return (
     <PaperProvider>
-      <View style={styles.container}>
-        {/* Image, Title, and Information Display */}
-        <View style={[styles.imageContainer, { height: imageHeight }]}>
-          {image ? (
-            <Image source={{ uri: image }} style={styles.previewImage} />
-          ) : (
-            <Text style={styles.noImageText}>No image selected yet</Text>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.container}>
+          {/* Image, Title, and Information Display */}
+          <View style={[styles.imageContainer, { height: imageHeight }]}>
+            {image ? (
+              <Image source={{ uri: image }} style={styles.previewImage} />
+            ) : (
+              <Text style={styles.noImageText}>No image selected yet</Text>
+            )}
+          </View>
+            
+          {/* Plant text and information */}
+          <View style={styles.textContainer}>
+            <TextInput
+              style={styles.mainText}
+              placeholder="Enter plant name"
+              value={plantName}
+              onChangeText={setPlantName}
+            />
+            <Text style={styles.secondaryText}>{plantSpecies}</Text>
+          </View>
+
+          {/* Save to Garden Button */}
+          <Button
+            mode="contained-tonal"
+            onPress={handleSaveToGarden}
+            disabled={!image} // Disable button if no image is loaded
+            style={styles.saveGardenButton}
+          >
+            Save to Garden
+          </Button>
+
+          {/* Add Photo Button */}
+          <Button
+            mode="contained-tonal"
+            onPress={handleAddPhotoPress}
+            style={styles.addPhotoButton}
+          >
+            Scan Plant
+          </Button>
+
+          {/* Loading Message */}
+          {loadingMessage && (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>{loadingMessage}</Text>
+            </View>
           )}
         </View>
-        <View style={styles.textContainer}>
-          <TextInput
-            style={styles.mainText}
-            placeholder="Enter plant name"
-            value={plantName}
-            onChangeText={setPlantName}
-          />
-          <Text style={styles.secondaryText}>information</Text>
-        </View>
+      </ScrollView>
 
-        {/* Save to Garden Button */}
-        <Button
-          mode="contained-tonal"
-          onPress={handleSaveToGarden}
-          disabled={!image} // Disable button if no image is loaded
-          style={styles.saveGardenButton}
-        >
-          Save to Garden
-        </Button>
-
-        {/* Add Photo Button */}
-        <Button
-          mode="contained-tonal"
-          onPress={handleAddPhotoPress}
-          style={styles.addPhotoButton}
-        >
-          Scan Plant
-        </Button>
-
-        {/* Loading Message */}
-        {loadingMessage && (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>{loadingMessage}</Text>
-          </View>
-        )}
-
-      </View>
+      {renderOrganSelectionModal()}
+      {renderResultSelectionModal()}
     </PaperProvider>
   );
 }
