@@ -4,19 +4,23 @@ import { MD3Theme } from 'react-native-paper';
 
 export const makeStyles = (theme: MD3Theme) =>
   StyleSheet.create({
-      container: {
+    scrollViewContent: {
+      flexGrow: 1,
+      justifyContent: 'space-between',
+      padding: 16,
+    },
+    container: {
       flex: 1,
-      padding: 10,
-      paddingTop: 100,
-      justifyContent: 'flex-start',
-      alignItems: 'flex-start',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 16,
       backgroundColor: theme.colors.background,
     },
     imageContainer: {
       width: '100%',
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 20,
+      marginBottom: 0,
       borderWidth: 0,
       borderColor: '#ccc',
       borderRadius: 0,
@@ -34,7 +38,7 @@ export const makeStyles = (theme: MD3Theme) =>
     textContainer: {
       width: '100%',
       paddingHorizontal: 10,
-      marginBottom: 20,
+      marginBottom: 60,
     },
   
     //Plant text and information
@@ -47,38 +51,6 @@ export const makeStyles = (theme: MD3Theme) =>
       fontSize: 16,
       color: theme.colors.onBackground,
     },
-    organContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    marginVertical: 10,
-    },
-    organButton: {
-      padding: 10,
-      margin: 5,
-      borderRadius: 5,
-      borderWidth: 1,
-      borderColor: 'gray',
-    },
-    selectedOrganButton: {
-      backgroundColor: 'lightblue',
-    },
-    organButtonText: {
-      fontSize: 16,
-    },
-    plantItem: {
-      padding: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: '#ccc',
-    },
-    plantName: {
-      fontSize: 16,
-    },
-    plantScore: {
-      fontSize: 14,
-      color: 'gray',
-    },
-  
     //button styles
     saveGardenButton: {
         position: 'absolute',
@@ -113,25 +85,58 @@ export const makeStyles = (theme: MD3Theme) =>
       fontSize: 16,
     },
     // Modal styles
-    modalView: {
-      margin: 20,
-      backgroundColor: 'white',
-      borderRadius: 20,
-      padding: 35,
+    modalContainer: {
+      flex: 1,
+      justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
-      elevation: 5,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
-    modalText: {
-      marginBottom: 15,
-      textAlign: 'center',
+    modalContent: {
+      width: '80%',
+      backgroundColor: 'white',
+      borderRadius: 10,
+      padding: 20,
+      alignItems: 'center',
+    },
+    modalTitle: {
       fontSize: 18,
       fontWeight: 'bold',
+      marginBottom: 20,
+    },
+    modalOption: {
+      fontSize: 16,
+      paddingVertical: 10,
+      textAlign: 'center',
+      width: '100%',
+      flexWrap: 'wrap', // Ensure text wraps within the container
+    },
+    resultContainer: {
+      alignItems: 'center', // Center the content horizontally
+      marginBottom: 10, // Add some space between results
+    },
+    resultInfo: {
+      fontSize: 16,
+      paddingVertical: 0,
+      textAlign: 'center',
+      width: '100%',
+      flexWrap: 'wrap', // Ensure text wraps within the container
+    },
+    resultBox: {
+      backgroundColor: '#7dd87d', // green background
+      padding: 10, // Padding inside the box
+      marginVertical: 5, // Vertical margin between boxes
+      borderWidth: 1, // Border width
+      borderColor: '#ccc', // Border color
+      borderRadius: 5, // Rounded corners
+      shadowColor: '#000', // Shadow color
+      shadowOffset: { width: 0, height: 2 }, // Shadow offset
+      shadowOpacity: 0.2, // Shadow opacity
+      shadowRadius: 2, // Shadow radius
+      elevation: 2, // Elevation for Android shadow
+    },
+    resultImage: {
+      width: 100, // Set the width of the image
+      height: 100, // Set the height of the image
+      marginBottom: 10, // Add some space below the image
     },
   });

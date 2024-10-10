@@ -10,21 +10,22 @@ export const createTable = async () => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
       uri TEXT
+      species TEXT
     );
   `);
 };
 
 // Insert an image into the database
-export const insertImage = async (name: string, uri: string) => {
+export const insertImage = async (name: string, uri: string, species: string) => {
   const db = await dbPromise;
-  await db.runAsync('INSERT INTO images (name, uri) VALUES (?, ?);', [name, uri]);
+  await db.runAsync('INSERT INTO images (name, uri, species) VALUES (?, ?, ?);', [name, uri, species]);
 };
 
 // Get all images from the database
-export const getImages = async (callback: (images: { name: string, uri: string }[]) => void) => {
+export const getImages = async (callback: (images: { name: string, uri: string, species: string }[]) => void) => {
   const db = await dbPromise;
-  const rows: { name: string, uri: string }[] = await db.getAllAsync('SELECT * FROM images;');
-  const images = rows.map(row => ({ name: row.name, uri: row.uri }));
+  const rows: { name: string, uri: string, species: string }[] = await db.getAllAsync('SELECT * FROM images;');
+  const images = rows.map(row => ({ name: row.name, uri: row.uri, species: row.species }));
   callback(images);
 };
 
