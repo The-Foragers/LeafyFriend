@@ -10,10 +10,10 @@ export const identifyPlant = async (imageUri, organ) => {
     type: 'image/jpeg',
     name: 'plant.jpg',
   });
-  formData.append('organs', organ); 
+  formData.append('organs', organ);
 
   try {
-    const response = await axios.post(`${PLANTNET_API_URL}?api-key=${API_KEY}`, formData, {
+    const response = await axios.post(`${PLANTNET_API_URL}?api-key=${API_KEY}&include-related-images=true`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

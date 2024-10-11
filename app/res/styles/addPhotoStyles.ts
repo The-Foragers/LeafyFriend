@@ -135,8 +135,15 @@ export const makeStyles = (theme: MD3Theme) =>
       elevation: 2, // Elevation for Android shadow
     },
     resultImage: {
-      width: 100, // Set the width of the image
-      height: 100, // Set the height of the image
-      marginBottom: 10, // Add some space below the image
+      width: 85,
+      height: 85,
+      borderRadius: 15,
+      marginHorizontal: 10, // Add horizontal margin to space out images
+    },
+    imageRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around', // Space out the images evenly
+      alignItems: 'center',
+      marginTop: 10,
     },
   });
