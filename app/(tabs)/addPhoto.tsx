@@ -216,7 +216,7 @@ export default function AddPhotoScreen() {
                   Confidence: {(result.score * 100).toFixed(2) + '%'}
                 </Text>
                 <View style={styles.imageRow}>
-                {result.images.slice(0, 3).map((image, imgIndex) => (
+                {result.images.slice(0, 3).map((image: any, imgIndex: number) => (
                   <Image key={imgIndex} source={{ uri: image.url.s }} style={styles.resultImage} />
                 ))}
               </View>
