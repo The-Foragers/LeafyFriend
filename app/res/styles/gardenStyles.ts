@@ -90,4 +90,28 @@ export const makeStyles = (theme: MD3Theme) =>
       color: 'white',
       fontSize: 16,
     },
+    speciesDataContainer: { // New style for the species data
+      backgroundColor: theme.colors.surface, // White background for the species info
+      borderRadius: 10, // Rounded corners for aesthetics
+      padding: 15, // Padding inside the container
+      marginTop: 20, // Margin to separate from the image
+      maxHeight: 300, // Max height for the scrollable area
+      overflow: 'scroll', // Enable scrolling if content overflows
+    },
+    speciesDataText: { // Optional: Style for individual text items
+      fontSize: 16,
+      color: 'black', // Text color for readability
+      marginBottom: 5, // Spacing between items
+    },
+    speciesToggleButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 5,
+      padding: 10,
+      marginTop: 10,
+    },
+    speciesToggleButtonText: {
+      color: 'white',
+      textAlign: 'center',
+      fontSize: 16,
+    },
   });

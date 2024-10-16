@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { insertImage, getImages, createTable } from '@/app/utils/database';
 import { identifyPlant } from '@/scripts/Pl@ntNetAPI'; // Import the identifyPlant function
 import { makeStyles } from '@/app/res/styles/addPhotoStyles'; // Import the styles
+import axios from 'axios';
 
 
 // Define the type for the route parameters

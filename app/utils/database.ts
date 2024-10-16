@@ -14,6 +14,34 @@ export const createTable = async () => {
     );
   `);
 };
+export const updateTableSchema = async () => {
+  const db = await dbPromise;
+
+  // Create a new table with the updated schema
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS images_new (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      uri TEXT,
+      species TEXT
+    );
+  `);
+
+  // Copy data from old table to new table
+  await db.execAsync(`
+    INSERT INTO images_new (id, name, uri)
+    SELECT id, name, uri FROM images;
+  `);
+
+  // Drop the old table
+  await db.execAsync('DROP TABLE images;');
+
+  // Rename the new table to the old table name
+  await db.execAsync('ALTER TABLE images_new RENAME TO images;');
+};
+
+// Call this function somewhere to update the schema
+updateTableSchema();
 
 // Insert an image into the database
 export const insertImage = async (name: string, uri: string, species: string) => {
