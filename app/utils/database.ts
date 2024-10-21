@@ -41,6 +41,9 @@ export const updateTableSchema = async () => {
   await db.execAsync('ALTER TABLE images_new RENAME TO images;');
 };
 
+// Call this function somewhere to update the schema
+updateTableSchema();
+
 // Insert an image into the database
 export const insertImage = async (name: string, uri: string, species: string) => {
   const db = await dbPromise;

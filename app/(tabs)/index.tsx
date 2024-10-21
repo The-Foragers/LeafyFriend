@@ -1,13 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, Modal, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { View, Text, StyleSheet, Image, ScrollView, Modal, TouchableOpacity, Alert } from 'react-native';
+import { useRoute, RouteProp, useFocusEffect, NavigationProp, Theme as NavigationTheme } from '@react-navigation/native';
 import { getImages, deleteImage } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
-import { useTheme } from 'react-native-paper';
-import { makeStyles } from '@/app/res/styles/gardenStyles';
-import { fetchPlantInfoBySpecies } from '@/scripts/perenual';
-import { fetchPlantInfoByID } from '@/scripts/perenual2';
-
+import { Button, Provider as PaperProvider, useTheme, MD3Theme } from 'react-native-paper';
+import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
 
 export default function GardenScreen() {
   const theme = useTheme();
@@ -16,18 +13,16 @@ export default function GardenScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ name: string, uri: string, species: string } | null>(null);
 
-
   useFocusEffect(
     useCallback(() => {
       getImages(setImages);
     }, [])
   );
 
-const handleImageClick = (image) => {
-  setSelectedImage(image);
-  setModalVisible(true);
-   // Reset species data
-};
+  const handleImageClick = (image: { name: string, uri: string, species: string }) => {
+    setSelectedImage(image);
+    setModalVisible(true);
+  };
 
   const handleDeleteImage = () => {
     if (selectedImage) {
@@ -43,8 +38,11 @@ const handleImageClick = (image) => {
             text: 'Delete',
             style: 'destructive',
             onPress: () => {
+              // Delete the image from the database
               deleteImage(selectedImage.uri);
+              // Update the images state
               setImages(images.filter(image => image.uri !== selectedImage.uri));
+              // Close the modal
               setModalVisible(false);
             },
           },
@@ -55,6 +53,7 @@ const handleImageClick = (image) => {
   };
 
   const handleSettingsPress = () => {
+    // Handle the settings button press here (e.g., navigate to settings screen)
     alert('Settings button pressed');
   };
 
