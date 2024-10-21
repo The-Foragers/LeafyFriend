@@ -1,8 +1,8 @@
-# Welcome to your Expo app 👋
+# Welcome to Leafy Friends 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Get started
+## If you'd like to contribute, here's how you can get started as a developer:
 
 1. Install dependencies
 
