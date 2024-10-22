@@ -48,6 +48,7 @@ export default function AddPhotoScreen() {
   const [showSpeciesData, setShowSpeciesData] = useState<boolean>(false);
   const [loadingSpecies, setLoadingSpecies] = useState<boolean>(false);
   const [isSpeciesModalVisible, setSpeciesModalVisible] = useState<boolean>(false);
+  const [shouldFetchSpecies, setShouldFetchSpecies] = useState<boolean>(false);
   //This is the code that makes the option menu open each time the screen is opened
 
 /*   useEffect(() => {
@@ -195,10 +196,26 @@ export default function AddPhotoScreen() {
     }
   };
 //joels function from here .........................
+
+  const resetState = () => {
+    setImage(null);
+    setPlantName('');
+    setPlantSpecies('Unknown');
+    setSpeciesData(null);
+    setIdentificationResults([]);
+    setLoadingMessage(null);
+    setSelectedOrgan('leaf'); // Reset to default organ if necessary
+    setIsOrganModalVisible(false);
+    setIsResultModalVisible(false);
+    setSpeciesModalVisible(false);
+  };
+
   const handleShowSpeciesData = async () => {
-        if (!showSpeciesData && !speciesData) {
+        //if (!showSpeciesData && !speciesData) {
+        if (plantSpecies && !showSpeciesData) {
+         console.log("Fetching species data for:", plantSpecies);
           // If species data is not loaded and the user is requesting to show it, fetch the data
-          setLoadingMessage('Getting info');
+          //setLoadingMessage('Getting info');
 
           try {
             // Make the API call here using the selected image species
@@ -214,7 +231,7 @@ export default function AddPhotoScreen() {
 
             } else {
               setSpeciesData(null); // No species data found
-              setLoadingMessage('Failed to load info');
+              //setLoadingMessage('No Species Data found');
             }
           } catch (error) {
             console.error("Error fetching species data:", error);
@@ -226,7 +243,7 @@ export default function AddPhotoScreen() {
           }
         }else {
      setShowSpeciesData((prev) => !prev);
-     setSpeciesModalVisible(true);
+     //setSpeciesModalVisible(true);
      }
    };
 
@@ -242,10 +259,21 @@ export default function AddPhotoScreen() {
     setIsResultModalVisible(true); // Show result selection modal
   };
 
-  const handleResultSelect = (result: any) => {
+const handleResultSelect = async (result: any) => {
   setPlantSpecies(result.species.scientificNameWithoutAuthor);
+  setShouldFetchSpecies(true); // Set this to true to indicate fetching is allowed
   setIsResultModalVisible(false);
-  };
+};
+
+// Modify the effect
+useEffect(() => {
+  if (shouldFetchSpecies && plantSpecies && plantSpecies !== 'Unknown') {
+    handleShowSpeciesData();
+    setSpeciesModalVisible(true);
+    setShouldFetchSpecies(false); // Reset after fetching
+
+  }
+}, [plantSpecies, shouldFetchSpecies]);
 
   const renderResultSelectionModal = () => (
   <Modal
@@ -328,6 +356,10 @@ const renderSpeciesInfoModal = () => (
       {/* Display species information */}
       {speciesData ? (
         <ScrollView contentContainerStyle={{ padding: 20 }}>
+        <Image
+            source={{ uri: speciesData.default_image.thumbnail }} // Replace 'imageUrl' with your actual image URL field
+            style={{ width: '100%', height: 200, resizeMode: 'cover', marginBottom: 10 }} // Adjust the styles as needed
+                  />
           <Text style={styles.speciesDataTitle}>Species Information:</Text>
          <Text style={styles.modalText}>Description: {speciesData.description}</Text>
          <Text style={styles.modalText}>Watering: {speciesData.watering}</Text>
@@ -352,8 +384,11 @@ const renderSpeciesInfoModal = () => (
 StyleSheet is in app/res/styles/addPhotoStyles */
 
   return (
+
     <PaperProvider>
+
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
+
         <View style={styles.container}>
           {/* Image, Title, and Information Display */}
           <View style={[styles.imageContainer, { height: imageHeight }]}>
@@ -377,14 +412,7 @@ StyleSheet is in app/res/styles/addPhotoStyles */
                  <View style={styles.speciesRow}>
                    <Text style={styles.secondaryText}>{plantSpecies}</Text>
 
-                   <Button
-                     mode="contained-tonal"
-                     onPress={handleShowSpeciesData}
-                     style={styles.speciesInfo}  // Custom styles for the button
-                   >
-                     Species Info
-                   </Button>
-                   {renderSpeciesInfoModal()}
+
                  </View>
                </View>
 
@@ -407,6 +435,9 @@ StyleSheet is in app/res/styles/addPhotoStyles */
             Scan Plant
           </Button>
 
+
+
+
           {/* Loading Message */}
           {loadingMessage && (
             <View style={styles.loadingContainer}>
@@ -419,9 +450,16 @@ StyleSheet is in app/res/styles/addPhotoStyles */
 
         </View>
       </ScrollView>
+        <Button
+        mode="outlined"
+        onPress={resetState}
+        style={styles.resetButton}>
+              Try Again!
+            </Button>
 
       {renderOrganSelectionModal()}
       {renderResultSelectionModal()}
+      {renderSpeciesInfoModal()}
 
 
     </PaperProvider>

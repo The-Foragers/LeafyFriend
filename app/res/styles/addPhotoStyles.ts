@@ -60,6 +60,13 @@ export const makeStyles = (theme: MD3Theme) =>
         paddingHorizontal: 0,
         flex: 1,
       },
+
+      resetButton: {
+       backgroundColor: theme.colors.secondary,
+       justifyContent: 'center', // Center contents vertically
+       alignItems: 'center',
+
+    },
       addPhotoButton: {
         position: 'absolute',
         bottom: 20,
@@ -68,6 +75,7 @@ export const makeStyles = (theme: MD3Theme) =>
         color: theme.colors.onSecondary, // change text color to onSecondary
         paddingHorizontal: 0,
         flex: 1,
+
       },
       speciesInfo: {
       position: 'center',
