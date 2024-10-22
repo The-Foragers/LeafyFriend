@@ -74,6 +74,7 @@ export const makeStyles = (theme: MD3Theme) =>
         backgroundColor: theme.colors.secondary,
         color: theme.colors.onSecondary, // change text color to onSecondary
         paddingHorizontal: 0,
+        flex: 1,
 
       },
       speciesInfo: {
