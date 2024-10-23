@@ -60,6 +60,13 @@ export const makeStyles = (theme: MD3Theme) =>
         paddingHorizontal: 0,
         flex: 1,
       },
+
+      resetButton: {
+       backgroundColor: theme.colors.secondary,
+       justifyContent: 'center', // Center contents vertically
+       alignItems: 'center',
+
+    },
       addPhotoButton: {
         position: 'absolute',
         bottom: 20,
@@ -68,7 +75,23 @@ export const makeStyles = (theme: MD3Theme) =>
         color: theme.colors.onSecondary, // change text color to onSecondary
         paddingHorizontal: 0,
         flex: 1,
+
       },
+      speciesInfo: {
+      position: 'center',
+      bottom: 20,
+
+      backgroundColor: theme.colors.secondary,
+      color: theme.colors.onSecondary, // change text color to onSecondary
+      paddingHorizontal: 0,
+
+        },
+        speciesRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: 8,
+        },
   
   // Loading message styles
     loadingContainer: {
@@ -146,4 +169,25 @@ export const makeStyles = (theme: MD3Theme) =>
       alignItems: 'center',
       marginTop: 10,
     },
+
+    speciesDataContainer: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#d4edda', // Light green background color
+        borderRadius: 10, // Optional: to give rounded corners
+        margin: 10, // Optional: to add margin around the container
+        shadowColor: '#000', // Optional: to add a shadow effect
+        shadowOffset: { width: 0, height: 2 }, // Optional: shadow offset
+        shadowOpacity: 0.3, // Optional: shadow opacity
+        shadowRadius: 4, // Optional: shadow radius
+        elevation: 5, // Optional: for Android shadow
+      },
+      speciesDataTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+      },
+      modalText: {
+        fontSize: 16,
+        marginVertical: 5,
+      },
   });

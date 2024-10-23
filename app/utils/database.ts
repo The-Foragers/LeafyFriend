@@ -17,7 +17,7 @@ export const createTable = async () => {
 
 export const updateTableSchema = async () => {
   const db = await dbPromise;
-  
+
   // Create a new table with the updated schema
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS images_new (
@@ -70,8 +70,6 @@ export const checkTableSchema = async () => {
   const result = await db.getAllAsync('PRAGMA table_info(images);');
   console.log(result);
 };
-
-
 
 // Call createTable to ensure the table is created
 createTable();
