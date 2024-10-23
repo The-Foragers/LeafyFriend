@@ -297,7 +297,12 @@ useEffect(() => {
                 <Text style={styles.resultInfo}>
                   Confidence: {(result.score * 100).toFixed(2) + '%'}
                 </Text>
+                <View style={styles.imageRow}>
+                {result.images.slice(0, 3).map((image: any, imgIndex: number) => (
+                  <Image key={imgIndex} source={{ uri: image.url.s }} style={styles.resultImage} />
+                ))}
               </View>
+            </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -310,7 +315,7 @@ useEffect(() => {
     setLoadingMessage('Identifying plant...');
     try {
       const results = await identifyPlant(image, selectedOrgan.toLowerCase());
-      setIdentificationResults(results.results.slice(0, 5));
+      setIdentificationResults(results.results.slice(0, 4));
       setLoadingMessage(null);
     } catch (error) {
       setLoadingMessage('Failed to identify plant');
