@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, Modal, TouchableOpacity, Alert } from 'react-native';
-import { useRoute, RouteProp, useFocusEffect, NavigationProp, Theme as NavigationTheme } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { getImages, deleteImage } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
-import { Button, Provider as PaperProvider, useTheme, MD3Theme } from 'react-native-paper';
+import { Button, Menu, Provider as PaperProvider, useTheme } from 'react-native-paper';
 import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
 
 export default function GardenScreen() {
@@ -12,6 +12,7 @@ export default function GardenScreen() {
   const [images, setImages] = useState<{ name: string, uri: string, species: string }[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ name: string, uri: string, species: string } | null>(null);
+  const [sortMenuVisible, setSortMenuVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -38,11 +39,8 @@ export default function GardenScreen() {
             text: 'Delete',
             style: 'destructive',
             onPress: () => {
-              // Delete the image from the database
               deleteImage(selectedImage.uri);
-              // Update the images state
               setImages(images.filter(image => image.uri !== selectedImage.uri));
-              // Close the modal
               setModalVisible(false);
             },
           },
@@ -52,15 +50,38 @@ export default function GardenScreen() {
     }
   };
 
+  const handleSort = (criteria: 'name' | 'species') => {
+    const sortedImages = [...images].sort((a, b) => a[criteria].localeCompare(b[criteria]));
+    setImages(sortedImages);
+    setSortMenuVisible(false); // Close the menu after selection
+  };
+
+  const openSortMenu = () => setSortMenuVisible(true);
+  const closeSortMenu = () => setSortMenuVisible(false);
+
   const handleSettingsPress = () => {
-    // Handle the settings button press here (e.g., navigate to settings screen)
     alert('Settings button pressed');
   };
 
   return (
     <View style={styles.container}>
       <TopBar title="My Garden" showSettings={true} onSettingsPress={handleSettingsPress} />
-      {/*<Text style={styles.heading}>My Garden</Text>*/}
+
+      {/* Sort Dropdown Menu */}
+      <View style={styles.menuContainer}>
+        <Menu
+          visible={sortMenuVisible}
+          onDismiss={closeSortMenu}
+          anchor={
+            <Button mode="contained" onPress={openSortMenu} style={styles.sortButton}>
+              Sort
+            </Button>
+          }
+        >
+          <Menu.Item onPress={() => handleSort('name')} title="Sort by Name" />
+          <Menu.Item onPress={() => handleSort('species')} title="Sort by Species" />
+        </Menu>
+      </View>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {images.map((image, index) => (
@@ -77,9 +98,7 @@ export default function GardenScreen() {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}
+        onRequestClose={() => setModalVisible(!modalVisible)}
       >
         <View style={styles.modalView}>
           {selectedImage && (
