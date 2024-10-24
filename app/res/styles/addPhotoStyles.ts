@@ -51,47 +51,91 @@ export const makeStyles = (theme: MD3Theme) =>
       fontSize: 16,
       color: theme.colors.onBackground,
     },
-    //button styles
-    saveGardenButton: {
-        position: 'absolute',
-        bottom: 20,
-        left: 20,
-        backgroundColor: theme.colors.secondary,
-        paddingHorizontal: 0,
-        flex: 1,
-      },
-
-      resetButton: {
-       backgroundColor: theme.colors.secondary,
-       justifyContent: 'center', // Center contents vertically
-       alignItems: 'center',
-
+   plantInfoSection: {
+      width: '100%',
+      marginTop: 20,
     },
-      addPhotoButton: {
-        position: 'absolute',
-        bottom: 20,
-        right: 20,
-        backgroundColor: theme.colors.secondary,
-        color: theme.colors.onSecondary, // change text color to onSecondary
-        paddingHorizontal: 0,
-        flex: 1,
-
-      },
-      speciesInfo: {
-      position: 'center',
+    plantInfoContainer: {
+      marginTop: 5,
+      padding: 5,
+      backgroundColor: theme.colors.background,
+      borderRadius: 10,
+      alignItems: 'center',
+    },
+    plantInfoText: {
+      fontSize: 16,
+      color: '#333',
+      textAlign: 'left', // Align text to the left
+      width: '100%', // Ensure the text takes the full width of the container
+    },
+    plantImage: {
+      width: 300,
+      height: 300,
+      borderRadius: 10,
+    },
+    imageNavigationContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between', // Ensure space between arrows and image
+      marginTop: 10, // Add margin to separate from other elements
+    },
+    arrowButton: {
+      padding: 10,
+    },
+    arrowText: {
+      fontSize: 24,
+      color: theme.colors.onBackground,
+    },
+    //button styles
+    buttonContainer: {
+      width: '100%',
+      alignItems: 'center',
+      marginTop: 20, // Add margin to separate from other elements
+    },
+    saveGardenButton: {
+      position: 'absolute',
       bottom: 20,
-
+      left:0,
+      backgroundColor: theme.colors.secondary,
+      paddingHorizontal: 0,
+      flex: 1,
+    },
+    resetButton: {
+      backgroundColor: theme.colors.secondary,
+      justifyContent: 'center', // Center contents vertically
+      alignItems: 'center',
+      width: 'auto', // Ensure the button takes up most of the screen width
+      minWidth: '90%', // Set a minimum width to prevent button from being too narrow
+    },
+    resetButtonText: {
+      fontSize: 14, // Adjust font size as needed
+      color: theme.colors.onSecondary,
+      textAlign: 'center', // Center the text within the container
+      flexWrap: 'wrap', // Allow text to wrap if needed
+    },
+    addPhotoButton: {
+      position: 'absolute',
+      bottom: 20,
+      right: 0,
       backgroundColor: theme.colors.secondary,
       color: theme.colors.onSecondary, // change text color to onSecondary
       paddingHorizontal: 0,
+      flex: 1,
+      },
 
-        },
-        speciesRow: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: 8,
-        },
+    speciesInfo: {
+      position: 'absolute',
+      bottom: 20,
+      backgroundColor: theme.colors.secondary,
+      color: theme.colors.onSecondary, // change text color to onSecondary
+      paddingHorizontal: 0,
+    },
+    speciesRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 8,
+    },
   
   // Loading message styles
     loadingContainer: {
