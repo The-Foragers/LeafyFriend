@@ -49,6 +49,10 @@ export default function AddPhotoScreen() {
   const [loadingSpecies, setLoadingSpecies] = useState<boolean>(false);
   const [isSpeciesModalVisible, setSpeciesModalVisible] = useState<boolean>(false);
   const [shouldFetchSpecies, setShouldFetchSpecies] = useState<boolean>(false);
+  const [commonName, setCommonName] = useState<string>(''); // Common Name
+  const [plantImages, setPlantImages] = useState<string[]>([]); // Plant Images
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0); // Current image index
+  const [highestConfidence, setHighestConfidence] = useState<number | null>(null); // Highest confidence result
   //This is the code that makes the option menu open each time the screen is opened
 
 /*   useEffect(() => {
@@ -271,11 +275,11 @@ export default function AddPhotoScreen() {
     setIsResultModalVisible(true); // Show result selection modal
   };
 
-  const handleResultSelect = async (result: any) => {
+  /*const handleResultSelect = async (result: any) => {
     setPlantSpecies(result.species.scientificNameWithoutAuthor);
     setShouldFetchSpecies(true); // Set this to true to indicate fetching is allowed
     setIsResultModalVisible(false);
-  };
+  };*/
 
 // Modify the effect
 useEffect(() => {
@@ -322,17 +326,47 @@ useEffect(() => {
              </Modal>
              );
 
-  const handleIdentifyPlant = async () => {
-  if (image) {
-    setLoadingMessage('Identifying plant...');
-    try {
-      const results = await identifyPlant(image, selectedOrgan.toLowerCase());
-      setIdentificationResults(results.results.slice(0, 4));
-      setLoadingMessage(null);
-    } catch (error) {
-      setLoadingMessage('Failed to identify plant');
+ const handleIdentifyPlant = async () => {
+    if (image) {
+      setLoadingMessage('Identifying plant...');
+      try {
+        const results = await identifyPlant(image, selectedOrgan.toLowerCase());
+        if (results.results.length > 0) {
+          // Get the result with the highest confidence score
+          const highestConfidenceResult = results.results.reduce((prev: { score: number; }, current: { score: number; }) =>
+            (prev.score > current.score) ? prev : current
+          );
+          // Set the plant species, common name, and plant image to the highest confidence result
+          setPlantSpecies(highestConfidenceResult.species.scientificNameWithoutAuthor);
+          setCommonName(highestConfidenceResult.species.commonNames[0] || 'No common name');
+          setPlantImages(highestConfidenceResult.images.map((img: { url: { s: any; }; }) => img.url.s));
+          setHighestConfidence(parseFloat((highestConfidenceResult.score * 100).toFixed(2))); // Set highest confidence score
+          setCurrentImageIndex(0); // Reset to the first image
+
+          setShouldFetchSpecies(true);
+        } else {
+          setPlantSpecies('Unknown');
+          setCommonName('');
+          setPlantImages([]);
+        }
+        setLoadingMessage(null);
+      } catch (error) {
+        setLoadingMessage('Failed to identify plant');
+      }
     }
-  }};
+  };
+
+  const handleNextImage = () => {
+    if (plantImages.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % plantImages.length);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (plantImages.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + plantImages.length) % plantImages.length);
+    }
+  };
 
   const renderOrganSelectionModal = () => (
   <Modal
@@ -390,6 +424,37 @@ StyleSheet is in app/res/styles/addPhotoStyles */
 
                  </View>
                </View>
+                {/* Plant Results Information */}
+                         {plantSpecies !== 'Unknown' && (
+                           <View style={styles.plantInfoContainer}>
+                             <Text style={styles.plantInfoText}>Scientific Name: {plantSpecies}</Text>
+                             <Text style={styles.plantInfoText}>Common Name: {commonName}</Text>
+                             <Text style={styles.plantInfoText}>Confidence: {(highestConfidence)}%</Text>
+                             {plantImages.length > 0 && (
+                               <View style={styles.imageNavigationContainer}>
+                                 <TouchableOpacity onPress={handlePrevImage} style={styles.arrowButton}>
+                                   <Text style={styles.arrowText}>{"<"}</Text>
+                                 </TouchableOpacity>
+                                 <Image source={{ uri: plantImages[currentImageIndex] }} style={styles.plantImage} />
+                                 <TouchableOpacity onPress={handleNextImage} style={styles.arrowButton}>
+                                   <Text style={styles.arrowText}>{">"}</Text>
+                                 </TouchableOpacity>
+                               </View>
+                             )}
+                           </View>
+                         )}
+                         {plantSpecies !== 'Unknown' && (
+                           <View style={styles.buttonContainer}>
+                             <Button
+                               mode="contained-tonal"
+                               onPress={() => handleAddPhotoPress()}
+                               style={styles.resetButton}
+                             >
+                               Doesn't look the same? Try another angle
+                             </Button>
+                           </View>
+                         )}
+
 
                {speciesData ? (
                  <View style={styles.speciesInfoContainer}>
@@ -472,7 +537,7 @@ StyleSheet is in app/res/styles/addPhotoStyles */
             </Button>
 
       {renderOrganSelectionModal()}
-      {renderResultSelectionModal()}
+      {/*}{renderResultSelectionModal()}*/}
 
 
 
