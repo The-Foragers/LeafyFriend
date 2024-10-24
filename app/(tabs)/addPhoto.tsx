@@ -164,18 +164,30 @@ export default function AddPhotoScreen() {
 
   // Handle Save to Garden button press
   const handleSaveToGarden = async () => {
-    if (image && plantName && speciesData) {
+    if (image && plantName ) {
       try {
+              const description = speciesData?.description || 'Unknown';
+              const watering = speciesData?.watering || 'Unknown';
+              const wateringValue = speciesData?.watering_general_benchmark?.value || 'Unknown';
+              const wateringUnit = speciesData?.watering_general_benchmark?.unit || 'Unknown';
+              const poisonousToHumans = speciesData?.poisonousToHumans || false; // Assuming false is the default
+              const poisonousToPets = speciesData?.poisonousToPets || false; // Assuming false is the default
+              const scientificName = speciesData?.scientific_name || 'Unknown';
+              const family = speciesData?.family || 'Unknown';
+              const sunlight = speciesData?.sunlight || 'Unknown';
         // Insert the image URI into the database
-        await insertImage(plantName, image, plantSpecies,  speciesData.description,
-                                                                  speciesData.watering,
-                                                                  speciesData.watering_general_benchmark.value,
-                                                                  speciesData.watering_general_benchmark.unit,
-                                                                  speciesData.poisonousToHumans,
-                                                                  speciesData.poisonousToPets,
-                                                                  speciesData.scientific_name, // Add scientific name
-                                                                  speciesData.family,           // Add family
-                                                                  speciesData.sunlight);
+        await insertImage(  plantName,
+                                  image,
+                                  plantSpecies || 'Unknown', // Use 'Unknown' if plantSpecies is not defined
+                                  description,
+                                  watering,
+                                  wateringValue,
+                                  wateringUnit,
+                                  poisonousToHumans,
+                                  poisonousToPets,
+                                  scientificName,
+                                  family,
+                                  sunlight);
         setLoadingMessage('Saving to garden...');
 
         // Fetch the updated list of images
@@ -259,11 +271,11 @@ export default function AddPhotoScreen() {
     setIsResultModalVisible(true); // Show result selection modal
   };
 
-const handleResultSelect = async (result: any) => {
-  setPlantSpecies(result.species.scientificNameWithoutAuthor);
-  setShouldFetchSpecies(true); // Set this to true to indicate fetching is allowed
-  setIsResultModalVisible(false);
-};
+  const handleResultSelect = async (result: any) => {
+    setPlantSpecies(result.species.scientificNameWithoutAuthor);
+    setShouldFetchSpecies(true); // Set this to true to indicate fetching is allowed
+    setIsResultModalVisible(false);
+  };
 
 // Modify the effect
 useEffect(() => {
@@ -285,7 +297,7 @@ useEffect(() => {
     <View style={styles.modalContainer}>
       <View style={styles.modalContent}>
         <Text style={styles.modalTitle}>Select Plant Result</Text>
-        {identificationResults.map((result, index) => (
+          {identificationResults.map((result, index) => (
           <TouchableOpacity key={index} onPress={() => handleResultSelect(result)}>
               <View style={styles.resultBox}>
                 <Text style={styles.resultInfo}>
@@ -303,12 +315,12 @@ useEffect(() => {
                 ))}
               </View>
             </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  </Modal>
-  );
+           </TouchableOpacity>
+            ))}
+                 </View>
+               </View>
+             </Modal>
+             );
 
   const handleIdentifyPlant = async () => {
   if (image) {
@@ -342,48 +354,6 @@ useEffect(() => {
   </Modal>
   );
 
-const renderSpeciesInfoModal = () => (
-  <Modal
-    visible={isSpeciesModalVisible}
-    transparent={false} // Make the modal full screen
-    animationType="slide"
-    onRequestClose={() => setSpeciesModalVisible(false)}
-  >
-    <View style={{ flex: 1, backgroundColor: 'white' }}>
-      {/* Add a button to close the modal */}
-      <Button
-        onPress={() => setSpeciesModalVisible(false)}
-        style={{ alignSelf: 'flex-end', margin: 10 }}
-      >
-        Close
-      </Button>
-
-      {/* Display species information */}
-      {speciesData ? (
-        <ScrollView contentContainerStyle={{ padding: 20 }}>
-        <Image
-            source={{ uri: speciesData.default_image.thumbnail }} // Replace 'imageUrl' with your actual image URL field
-            style={{ width: '100%', height: 200, resizeMode: 'cover', marginBottom: 10 }} // Adjust the styles as needed
-                  />
-          <Text style={styles.speciesDataTitle}>Species Information:</Text>
-         <Text style={styles.modalText}>Description: {speciesData.description}</Text>
-         <Text style={styles.modalText}>Watering: {speciesData.watering}</Text>
-         <Text style={styles.modalText}>Water every: {speciesData.watering_general_benchmark.value} {speciesData.watering_general_benchmark.unit}</Text>
-         <Text style={styles.modalText}>Poisonous to Humans: {speciesData.poisonousToHumans ? 'Yes' : 'No'}</Text>
-         <Text style={styles.modalText}>Poisonous to Pets: {speciesData.poisonousToPets ? 'Yes' : 'No'}</Text>
-         <Text style={styles.modalText}>Species: {speciesData.common_name}</Text>
-         <Text style={styles.modalText}>Scientific Name: {speciesData.scientific_name}</Text>
-         <Text style={styles.modalText}>Family: {speciesData.family}</Text>
-         <Text style={styles.modalText}>Can you eat it?: {speciesData.edible_leaf? 'Yes' : 'No'}</Text>
-         <Text style={styles.modalText}>Sunlight: {speciesData.sunlight}</Text>
-
-        </ScrollView>
-      ) : (
-        <Text>Loading species data...</Text>
-      )}
-    </View>
-  </Modal>
-);
 
 /*Screen UI
 StyleSheet is in app/res/styles/addPhotoStyles */
@@ -421,6 +391,44 @@ StyleSheet is in app/res/styles/addPhotoStyles */
                  </View>
                </View>
 
+               {speciesData ? (
+                 <View style={styles.speciesInfoContainer}>
+                   <Text style={styles.speciesDataTitle}>Species Information:</Text>
+                   <View style={styles.container}>
+                     <Text style={styles.modalText}>
+                       Description: {speciesData?.description || 'Unknown'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Watering: {speciesData.watering || 'Unknown'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Water every: {speciesData.watering_general_benchmark?.value || 'Unknown'}{' '}
+                       {speciesData.watering_general_benchmark?.unit || 'Unknown'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Poisonous to Humans: {speciesData.poisonousToHumans ? 'Yes' : 'No'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Poisonous to Pets: {speciesData.poisonousToPets ? 'Yes' : 'No'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Scientific Name: {speciesData.scientific_name || 'Unknown'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Family: {speciesData.family || 'Unknown'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Sunlight: {speciesData.sunlight || 'Unknown'}
+                     </Text>
+                   </View>
+                 </View>
+               ) : (
+               <View style={styles.speciesInfoContainer}>
+                <Text style={styles.speciesDataTitle}>Species Information:</Text>
+                 <Text style={styles.modalText}>No information available.</Text>
+                </View>
+               )}
+
           {/* Save to Garden Button */}
           <Button
             mode="contained-tonal"
@@ -455,6 +463,7 @@ StyleSheet is in app/res/styles/addPhotoStyles */
 
         </View>
       </ScrollView>
+
         <Button
         mode="outlined"
         onPress={resetState}
@@ -464,7 +473,7 @@ StyleSheet is in app/res/styles/addPhotoStyles */
 
       {renderOrganSelectionModal()}
       {renderResultSelectionModal()}
-      {renderSpeciesInfoModal()}
+
 
 
     </PaperProvider>

@@ -77,20 +77,21 @@ export const makeStyles = (theme: MD3Theme) =>
         flex: 1,
 
       },
-      speciesInfo: {
-      position: 'center',
-      bottom: 20,
+      speciesInfoContainer: {
 
-      backgroundColor: theme.colors.secondary,
-      color: theme.colors.onSecondary, // change text color to onSecondary
-      paddingHorizontal: 0,
-
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 5,
+        backgroundColor: theme.colors.background,
+        marginBottom: 40,
         },
         speciesRow: {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
           marginTop: 8,
+
         },
   
   // Loading message styles
@@ -180,7 +181,8 @@ export const makeStyles = (theme: MD3Theme) =>
         shadowOffset: { width: 0, height: 2 }, // Optional: shadow offset
         shadowOpacity: 0.3, // Optional: shadow opacity
         shadowRadius: 4, // Optional: shadow radius
-        elevation: 5, // Optional: for Android shadow
+        elevation: 5,
+         padding: 10, // Optional: for Android shadow
       },
       speciesDataTitle: {
         fontSize: 20,
