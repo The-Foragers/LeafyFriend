@@ -51,6 +51,37 @@ export const makeStyles = (theme: MD3Theme) =>
       fontSize: 16,
       color: theme.colors.onBackground,
     },
+        plantInfoContainer: {
+          marginTop: 5,
+          padding: 5,
+          backgroundColor: theme.colors.background,
+          borderRadius: 10,
+          alignItems: 'center',
+        },
+        plantInfoText: {
+          fontSize: 16,
+          color: '#333',
+          textAlign: 'left', // Align text to the left
+          width: '100%', // Ensure the text takes the full width of the container
+        },
+        plantImage: {
+          width: 300,
+          height: 300,
+          borderRadius: 10,
+        },
+        imageNavigationContainer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between', // Ensure space between arrows and image
+          marginTop: 10, // Add margin to separate from other elements
+        },
+        arrowButton: {
+          padding: 10,
+        },
+        arrowText: {
+          fontSize: 24,
+          color: theme.colors.onBackground,
+        },
     //button styles
     saveGardenButton: {
         position: 'absolute',
