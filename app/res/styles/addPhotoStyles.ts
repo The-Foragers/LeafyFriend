@@ -124,6 +124,52 @@ export const makeStyles = (theme: MD3Theme) =>
           marginTop: 8,
 
         },
+
+
+
+        /*Organ Modal  */
+
+
+        organModalContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        },
+        organModalContent: {
+          width: '80%',
+          backgroundColor: theme.colors.surfaceVariant,
+          borderRadius: 10,
+          padding: 20,
+          alignItems: 'center',
+        },
+        organModalTitle: {
+          fontSize: 20,
+          fontWeight: 'bold',
+          marginBottom: 20,
+          color: theme.colors.inverseSurface,
+        },
+        organModalGridContainer: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        },
+        organModalGridItem: {
+          width: '25%',
+          alignItems: 'center',
+          marginVertical: 10,
+        },
+        organModalImage: {
+          width: 50,
+          height: 50,
+          marginBottom: 5,
+        },
+        organModalOption: {
+          fontSize: 14,
+          textAlign: 'center',
+        },
+/* End of organModal */
+
   
   // Loading message styles
     loadingContainer: {
@@ -213,7 +259,7 @@ export const makeStyles = (theme: MD3Theme) =>
         shadowOpacity: 0.3, // Optional: shadow opacity
         shadowRadius: 4, // Optional: shadow radius
         elevation: 5,
-         padding: 10, // Optional: for Android shadow
+        //padding: 10, // Optional: for Android shadow
       },
       speciesDataTitle: {
         fontSize: 20,

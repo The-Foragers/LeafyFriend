@@ -38,7 +38,7 @@ export default function AddPhotoScreen() {
   const [plantName, setPlantName] = useState<string>(''); // Plant Name
   const [plantSpecies, setPlantSpecies] = useState<string>('Unknown'); // Plant Species
   const [selectedOrgan, setSelectedOrgan] = useState<string>('leaf'); // Default organ
-  const organs = ['Leaf', 'Flower', 'Fruit', 'Bark']; // Organ options
+  const organs = ['leaf', 'flower', 'fruit', 'bark'];// Organ options
   const [identificationResults, setIdentificationResults] = useState<any[]>([]); // Identification results
   const [isResultModalVisible, setIsResultModalVisible] = useState<boolean>(false); // Result modal visibility
   const navigation = useNavigation<NavigationProp<RootStackParamList>>(); // Use navigation hook with proper type
@@ -302,7 +302,7 @@ useEffect(() => {
       <View style={styles.modalContent}>
         <Text style={styles.modalTitle}>Select Plant Result</Text>
           {identificationResults.map((result, index) => (
-          <TouchableOpacity key={index} onPress={() => handleResultSelect(result)}>
+          <TouchableOpacity key={index} onPress={() => handleOrganSelect(result)}>
               <View style={styles.resultBox}>
                 <Text style={styles.resultInfo}>
                   {result.species.scientificNameWithoutAuthor}
@@ -368,25 +368,57 @@ useEffect(() => {
     }
   };
 
+  const getImageForOrgan = (organ) => {
+    switch (organ) {
+      case 'leaf':
+        return require('../../assets/images/leaf.png'); // Adjusted path
+      case 'flower':
+        return require('../../assets/images/flower.png');
+      case 'fruit':
+        return require('../../assets/images/fruit.png');
+      case 'bark':
+        return require('../../assets/images/bark.png');
+      default:
+        console.log("No image found for", organ);
+        return null;
+    }
+  };
+  
+  
+  
+
   const renderOrganSelectionModal = () => (
-  <Modal
-    visible={isOrganModalVisible}
-    transparent={true}
-    animationType="slide"
-    onRequestClose={() => setIsOrganModalVisible(false)}
-  >
-    <View style={styles.modalContainer}>
-      <View style={styles.modalContent}>
-        <Text style={styles.modalTitle}>Select Plant Organ</Text>
-        {organs.map((organ) => (
-          <TouchableOpacity key={organ} onPress={() => handleOrganSelect(organ)}>
-            <Text style={styles.modalOption}>{organ}</Text>
-          </TouchableOpacity>
-        ))}
+    <Modal
+      visible={isOrganModalVisible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setIsOrganModalVisible(false)}
+    >
+      <View style={styles.organModalContainer}>
+        <View style={styles.organModalContent}>
+          <Text style={styles.organModalTitle}>Select Plant Organ</Text>
+          <View style={styles.organModalGridContainer}>
+            {organs.map((organ) => (
+              <TouchableOpacity
+                key={organ}
+                style={styles.organModalGridItem}
+                onPress={() => handleOrganSelect(organ)}
+              >
+                <Image
+                  source={getImageForOrgan(organ)}
+                  style={styles.organModalImage}
+                />
+                <Text style={styles.organModalOption}>{organ}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
       </View>
-    </View>
-  </Modal>
+    </Modal>
   );
+  
+
+
 
 
 /*Screen UI
