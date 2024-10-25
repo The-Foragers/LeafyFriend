@@ -51,6 +51,37 @@ export const makeStyles = (theme: MD3Theme) =>
       fontSize: 16,
       color: theme.colors.onBackground,
     },
+        plantInfoContainer: {
+          marginTop: 5,
+          padding: 5,
+          backgroundColor: theme.colors.background,
+          borderRadius: 10,
+          alignItems: 'center',
+        },
+        plantInfoText: {
+          fontSize: 16,
+          color: '#333',
+          textAlign: 'left', // Align text to the left
+          width: '100%', // Ensure the text takes the full width of the container
+        },
+        plantImage: {
+          width: 300,
+          height: 300,
+          borderRadius: 10,
+        },
+        imageNavigationContainer: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between', // Ensure space between arrows and image
+          marginTop: 10, // Add margin to separate from other elements
+        },
+        arrowButton: {
+          padding: 10,
+        },
+        arrowText: {
+          fontSize: 24,
+          color: theme.colors.onBackground,
+        },
     //button styles
     saveGardenButton: {
         position: 'absolute',
@@ -77,20 +108,21 @@ export const makeStyles = (theme: MD3Theme) =>
         flex: 1,
 
       },
-      speciesInfo: {
-      position: 'center',
-      bottom: 20,
+      speciesInfoContainer: {
 
-      backgroundColor: theme.colors.secondary,
-      color: theme.colors.onSecondary, // change text color to onSecondary
-      paddingHorizontal: 0,
-
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 5,
+        backgroundColor: theme.colors.background,
+        marginBottom: 40,
         },
         speciesRow: {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
           marginTop: 8,
+
         },
   
   // Loading message styles
@@ -158,9 +190,16 @@ export const makeStyles = (theme: MD3Theme) =>
       elevation: 2, // Elevation for Android shadow
     },
     resultImage: {
-      width: 100, // Set the width of the image
-      height: 100, // Set the height of the image
-      marginBottom: 10, // Add some space below the image
+      width: 85,
+      height: 85,
+      borderRadius: 15,
+      marginHorizontal: 10, // Add horizontal margin to space out images
+    },
+    imageRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-around', // Space out the images evenly
+      alignItems: 'center',
+      marginTop: 10,
     },
 
     speciesDataContainer: {
@@ -173,7 +212,8 @@ export const makeStyles = (theme: MD3Theme) =>
         shadowOffset: { width: 0, height: 2 }, // Optional: shadow offset
         shadowOpacity: 0.3, // Optional: shadow opacity
         shadowRadius: 4, // Optional: shadow radius
-        elevation: 5, // Optional: for Android shadow
+        elevation: 5,
+         padding: 10, // Optional: for Android shadow
       },
       speciesDataTitle: {
         fontSize: 20,

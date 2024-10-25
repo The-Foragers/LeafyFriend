@@ -49,6 +49,10 @@ export default function AddPhotoScreen() {
   const [loadingSpecies, setLoadingSpecies] = useState<boolean>(false);
   const [isSpeciesModalVisible, setSpeciesModalVisible] = useState<boolean>(false);
   const [shouldFetchSpecies, setShouldFetchSpecies] = useState<boolean>(false);
+  const [commonName, setCommonName] = useState<string>(''); // Common Name
+  const [plantImages, setPlantImages] = useState<string[]>([]); // Plant Images
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0); // Current image index
+  const [highestConfidence, setHighestConfidence] = useState<number | null>(null); // Highest confidence result
   //This is the code that makes the option menu open each time the screen is opened
 
 /*   useEffect(() => {
@@ -164,18 +168,30 @@ export default function AddPhotoScreen() {
 
   // Handle Save to Garden button press
   const handleSaveToGarden = async () => {
-    if (image && plantName && speciesData) {
+    if (image && plantName ) {
       try {
+              const description = speciesData?.description || 'Unknown';
+              const watering = speciesData?.watering || 'Unknown';
+              const wateringValue = speciesData?.watering_general_benchmark?.value || 'Unknown';
+              const wateringUnit = speciesData?.watering_general_benchmark?.unit || 'Unknown';
+              const poisonousToHumans = speciesData?.poisonousToHumans || false; // Assuming false is the default
+              const poisonousToPets = speciesData?.poisonousToPets || false; // Assuming false is the default
+              const scientificName = speciesData?.scientific_name || 'Unknown';
+              const family = speciesData?.family || 'Unknown';
+              const sunlight = speciesData?.sunlight || 'Unknown';
         // Insert the image URI into the database
-        await insertImage(plantName, image, plantSpecies,  speciesData.description,
-                                                                  speciesData.watering,
-                                                                  speciesData.watering_general_benchmark.value,
-                                                                  speciesData.watering_general_benchmark.unit,
-                                                                  speciesData.poisonousToHumans,
-                                                                  speciesData.poisonousToPets,
-                                                                  speciesData.scientific_name, // Add scientific name
-                                                                  speciesData.family,           // Add family
-                                                                  speciesData.sunlight);
+        await insertImage(  plantName,
+                                  image,
+                                  plantSpecies || 'Unknown', // Use 'Unknown' if plantSpecies is not defined
+                                  description,
+                                  watering,
+                                  wateringValue,
+                                  wateringUnit,
+                                  poisonousToHumans,
+                                  poisonousToPets,
+                                  scientificName,
+                                  family,
+                                  sunlight);
         setLoadingMessage('Saving to garden...');
 
         // Fetch the updated list of images
@@ -259,11 +275,11 @@ export default function AddPhotoScreen() {
     setIsResultModalVisible(true); // Show result selection modal
   };
 
-const handleResultSelect = async (result: any) => {
-  setPlantSpecies(result.species.scientificNameWithoutAuthor);
-  setShouldFetchSpecies(true); // Set this to true to indicate fetching is allowed
-  setIsResultModalVisible(false);
-};
+  /*const handleResultSelect = async (result: any) => {
+    setPlantSpecies(result.species.scientificNameWithoutAuthor);
+    setShouldFetchSpecies(true); // Set this to true to indicate fetching is allowed
+    setIsResultModalVisible(false);
+  };*/
 
 // Modify the effect
 useEffect(() => {
@@ -285,7 +301,7 @@ useEffect(() => {
     <View style={styles.modalContainer}>
       <View style={styles.modalContent}>
         <Text style={styles.modalTitle}>Select Plant Result</Text>
-        {identificationResults.map((result, index) => (
+          {identificationResults.map((result, index) => (
           <TouchableOpacity key={index} onPress={() => handleResultSelect(result)}>
               <View style={styles.resultBox}>
                 <Text style={styles.resultInfo}>
@@ -297,25 +313,60 @@ useEffect(() => {
                 <Text style={styles.resultInfo}>
                   Confidence: {(result.score * 100).toFixed(2) + '%'}
                 </Text>
+                <View style={styles.imageRow}>
+                {result.images.slice(0, 3).map((image: any, imgIndex: number) => (
+                  <Image key={imgIndex} source={{ uri: image.url.s }} style={styles.resultImage} />
+                ))}
               </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  </Modal>
-  );
+            </View>
+           </TouchableOpacity>
+            ))}
+                 </View>
+               </View>
+             </Modal>
+             );
 
-  const handleIdentifyPlant = async () => {
-  if (image) {
-    setLoadingMessage('Identifying plant...');
-    try {
-      const results = await identifyPlant(image, selectedOrgan.toLowerCase());
-      setIdentificationResults(results.results.slice(0, 5));
-      setLoadingMessage(null);
-    } catch (error) {
-      setLoadingMessage('Failed to identify plant');
+ const handleIdentifyPlant = async () => {
+    if (image) {
+      setLoadingMessage('Identifying plant...');
+      try {
+        const results = await identifyPlant(image, selectedOrgan.toLowerCase());
+        if (results.results.length > 0) {
+          // Get the result with the highest confidence score
+          const highestConfidenceResult = results.results.reduce((prev: { score: number; }, current: { score: number; }) =>
+            (prev.score > current.score) ? prev : current
+          );
+          // Set the plant species, common name, and plant image to the highest confidence result
+          setPlantSpecies(highestConfidenceResult.species.scientificNameWithoutAuthor);
+          setCommonName(highestConfidenceResult.species.commonNames[0] || 'No common name');
+          setPlantImages(highestConfidenceResult.images.map((img: { url: { s: any; }; }) => img.url.s));
+          setHighestConfidence(parseFloat((highestConfidenceResult.score * 100).toFixed(2))); // Set highest confidence score
+          setCurrentImageIndex(0); // Reset to the first image
+
+          setShouldFetchSpecies(true);
+        } else {
+          setPlantSpecies('Unknown');
+          setCommonName('');
+          setPlantImages([]);
+        }
+        setLoadingMessage(null);
+      } catch (error) {
+        setLoadingMessage('Failed to identify plant');
+      }
     }
-  }};
+  };
+
+  const handleNextImage = () => {
+    if (plantImages.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % plantImages.length);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (plantImages.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + plantImages.length) % plantImages.length);
+    }
+  };
 
   const renderOrganSelectionModal = () => (
   <Modal
@@ -337,48 +388,6 @@ useEffect(() => {
   </Modal>
   );
 
-const renderSpeciesInfoModal = () => (
-  <Modal
-    visible={isSpeciesModalVisible}
-    transparent={false} // Make the modal full screen
-    animationType="slide"
-    onRequestClose={() => setSpeciesModalVisible(false)}
-  >
-    <View style={{ flex: 1, backgroundColor: 'white' }}>
-      {/* Add a button to close the modal */}
-      <Button
-        onPress={() => setSpeciesModalVisible(false)}
-        style={{ alignSelf: 'flex-end', margin: 10 }}
-      >
-        Close
-      </Button>
-
-      {/* Display species information */}
-      {speciesData ? (
-        <ScrollView contentContainerStyle={{ padding: 20 }}>
-        <Image
-            source={{ uri: speciesData.default_image.thumbnail }} // Replace 'imageUrl' with your actual image URL field
-            style={{ width: '100%', height: 200, resizeMode: 'cover', marginBottom: 10 }} // Adjust the styles as needed
-                  />
-          <Text style={styles.speciesDataTitle}>Species Information:</Text>
-         <Text style={styles.modalText}>Description: {speciesData.description}</Text>
-         <Text style={styles.modalText}>Watering: {speciesData.watering}</Text>
-         <Text style={styles.modalText}>Water every: {speciesData.watering_general_benchmark.value} {speciesData.watering_general_benchmark.unit}</Text>
-         <Text style={styles.modalText}>Poisonous to Humans: {speciesData.poisonousToHumans ? 'Yes' : 'No'}</Text>
-         <Text style={styles.modalText}>Poisonous to Pets: {speciesData.poisonousToPets ? 'Yes' : 'No'}</Text>
-         <Text style={styles.modalText}>Species: {speciesData.common_name}</Text>
-         <Text style={styles.modalText}>Scientific Name: {speciesData.scientific_name}</Text>
-         <Text style={styles.modalText}>Family: {speciesData.family}</Text>
-         <Text style={styles.modalText}>Can you eat it?: {speciesData.edible_leaf? 'Yes' : 'No'}</Text>
-         <Text style={styles.modalText}>Sunlight: {speciesData.sunlight}</Text>
-
-        </ScrollView>
-      ) : (
-        <Text>Loading species data...</Text>
-      )}
-    </View>
-  </Modal>
-);
 
 /*Screen UI
 StyleSheet is in app/res/styles/addPhotoStyles */
@@ -415,6 +424,75 @@ StyleSheet is in app/res/styles/addPhotoStyles */
 
                  </View>
                </View>
+                {/* Plant Results Information */}
+                         {plantSpecies !== 'Unknown' && (
+                           <View style={styles.plantInfoContainer}>
+                             <Text style={styles.plantInfoText}>Scientific Name: {plantSpecies}</Text>
+                             <Text style={styles.plantInfoText}>Common Name: {commonName}</Text>
+                             <Text style={styles.plantInfoText}>Confidence: {(highestConfidence)}%</Text>
+                             {plantImages.length > 0 && (
+                               <View style={styles.imageNavigationContainer}>
+                                 <TouchableOpacity onPress={handlePrevImage} style={styles.arrowButton}>
+                                   <Text style={styles.arrowText}>{"<"}</Text>
+                                 </TouchableOpacity>
+                                 <Image source={{ uri: plantImages[currentImageIndex] }} style={styles.plantImage} />
+                                 <TouchableOpacity onPress={handleNextImage} style={styles.arrowButton}>
+                                   <Text style={styles.arrowText}>{">"}</Text>
+                                 </TouchableOpacity>
+                               </View>
+                             )}
+                           </View>
+                         )}
+                         {plantSpecies !== 'Unknown' && (
+                           <View style={styles.buttonContainer}>
+                             <Button
+                               mode="contained-tonal"
+                               onPress={() => handleAddPhotoPress()}
+                               style={styles.resetButton}
+                             >
+                               Doesn't look the same? Try another angle
+                             </Button>
+                           </View>
+                         )}
+
+
+               {speciesData ? (
+                 <View style={styles.speciesInfoContainer}>
+                   <Text style={styles.speciesDataTitle}>Species Information:</Text>
+                   <View style={styles.container}>
+                     <Text style={styles.modalText}>
+                       Description: {speciesData?.description || 'Unknown'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Watering: {speciesData.watering || 'Unknown'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Water every: {speciesData.watering_general_benchmark?.value || 'Unknown'}{' '}
+                       {speciesData.watering_general_benchmark?.unit || 'Unknown'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Poisonous to Humans: {speciesData.poisonousToHumans ? 'Yes' : 'No'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Poisonous to Pets: {speciesData.poisonousToPets ? 'Yes' : 'No'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Scientific Name: {speciesData.scientific_name || 'Unknown'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Family: {speciesData.family || 'Unknown'}
+                     </Text>
+                     <Text style={styles.modalText}>
+                       Sunlight: {speciesData.sunlight || 'Unknown'}
+                     </Text>
+                   </View>
+                 </View>
+               ) : (
+               <View style={styles.speciesInfoContainer}>
+                <Text style={styles.speciesDataTitle}>Species Information:</Text>
+                 <Text style={styles.modalText}>No information available.</Text>
+                </View>
+               )}
 
           {/* Save to Garden Button */}
           <Button
@@ -450,6 +528,7 @@ StyleSheet is in app/res/styles/addPhotoStyles */
 
         </View>
       </ScrollView>
+
         <Button
         mode="outlined"
         onPress={resetState}
@@ -458,8 +537,8 @@ StyleSheet is in app/res/styles/addPhotoStyles */
             </Button>
 
       {renderOrganSelectionModal()}
-      {renderResultSelectionModal()}
-      {renderSpeciesInfoModal()}
+      {/*}{renderResultSelectionModal()}*/}
+
 
 
     </PaperProvider>
