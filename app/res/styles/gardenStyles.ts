@@ -90,4 +90,9 @@ export const makeStyles = (theme: MD3Theme) =>
       color: 'white',
       fontSize: 16,
     },
+    sortButton: {
+      margin: 10,
+      padding: 10,
+      backgroundColor: theme.colors.primary,
+    },
   });
