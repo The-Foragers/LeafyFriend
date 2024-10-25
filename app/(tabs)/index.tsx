@@ -1,10 +1,12 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, Modal, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { getImages, deleteImage } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
 import { Button, Menu, Provider as PaperProvider, useTheme } from 'react-native-paper';
 import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
+import Modal from 'react-native-modal';
+
 
 export default function GardenScreen() {
   const theme = useTheme();
@@ -94,35 +96,46 @@ export default function GardenScreen() {
         ))}
       </ScrollView>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(!modalVisible)}
-      >
-        <View style={styles.modalView}>
-          {selectedImage && (
-            <>
-              <Image source={{ uri: selectedImage.uri }} style={styles.fullImage} />
-              <Text style={styles.modalText}>Plant Species: {selectedImage.species}</Text>
-              <View style={styles.modalButtonContainer}>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setModalVisible(!modalVisible)}
-                >
-                  <Text style={styles.closeButtonText}>Close</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={handleDeleteImage}
-                >
-                  <Text style={styles.deleteButtonText}>Delete</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
+
+{/* Modal for full image view and plant information*/}
+
+<Modal
+  isVisible={modalVisible}
+  onSwipeComplete={() => setModalVisible(false)}
+  swipeDirection="down"
+  style={styles.modalStyle}
+  onBackdropPress={() => setModalVisible(false)}
+>
+  <View style={styles.modalContent}>
+    {selectedImage && (
+      <>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <Image source={{ uri: selectedImage.uri }} style={styles.fullImage} />
+          <Text style={styles.modalText}>Plant Species: {selectedImage.species}</Text>
+          {/* Add more content here */}
+        </ScrollView>
+        <View style={styles.modalButtonContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteImage}
+          >
+            <Text style={styles.deleteButtonText}>Delete</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+      </>
+    )}
+  </View>
+</Modal>
+
+
+
+{      /* End of Garden Screen */}
     </View>
   );
 }

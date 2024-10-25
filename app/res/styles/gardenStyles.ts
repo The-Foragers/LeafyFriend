@@ -51,45 +51,75 @@ export const makeStyles = (theme: MD3Theme) =>
         color: '#777', // Lighter text for the plant type
       },
 
-    modalView: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    },
-    fullImage: {
-      width: '80%',
-      height: '50%',
-      resizeMode: 'contain',
-    },
-    modalText: {
-      fontSize: 18,
-      color: 'white',
-      marginTop: 20,
-    },
-    modalButtonContainer: {
-      flexDirection: 'row',
-      marginTop: 20,
-    },
-    closeButton: {
-      padding: 10,
-      backgroundColor: '#6eba70',
-      borderRadius: 5,
-      marginRight: 10,
-    },
-    closeButtonText: {
-      color: 'white',
-      fontSize: 16,
-    },
-    deleteButton: {
-      padding: 10,
-      backgroundColor: '#ff4d4d',
-      borderRadius: 5,
-    },
-    deleteButtonText: {
-      color: 'white',
-      fontSize: 16,
-    },
+
+      // ... other existing styles
+      modalView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      },
+      // New styles for the modal
+      modalStyle: {
+        justifyContent: 'flex-end',
+        margin: 0,
+      },
+      modalContent: {
+        backgroundColor: theme.colors.surface,
+        padding: 20,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        maxHeight: '80%',
+      },
+      scrollViewContent: {
+        alignItems: 'center',
+      },
+      fullImage: {
+        width: '100%',
+        height: 300,
+        resizeMode: 'contain',
+        borderRadius: 10,
+        marginBottom: 20,
+      },
+      modalText: {
+        fontSize: 18,
+        color: theme.colors.onSurface,
+        marginTop: 10,
+        textAlign: 'center',
+      },
+      modalButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20,
+      },
+      closeButton: {
+        flex: 1,
+        padding: 15,
+        backgroundColor: '#6eba70',
+        borderRadius: 5,
+        marginRight: 5,
+      },
+      closeButtonText: {
+        color: 'white',
+        fontSize: 16,
+        textAlign: 'center',
+        fontWeight: 'bold',
+      },
+      deleteButton: {
+        flex: 1,
+        padding: 15,
+        backgroundColor: '#ff4d4d',
+        borderRadius: 5,
+        marginLeft: 5,
+      },
+      deleteButtonText: {
+        color: 'white',
+        fontSize: 16,
+        textAlign: 'center',
+        fontWeight: 'bold',
+      },
+
+
     sortButton: {
       margin: 10,
       padding: 10,
