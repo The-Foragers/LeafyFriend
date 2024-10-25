@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useCallback, useState, useRef } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { getImages, deleteImage } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
@@ -15,7 +15,10 @@ export default function GardenScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ name: string, uri: string, species: string } | null>(null);
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
-
+  //used for scrollview in plant modal:
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  
   useFocusEffect(
     useCallback(() => {
       getImages(setImages);
@@ -51,6 +54,19 @@ export default function GardenScreen() {
       );
     }
   };
+
+    //
+    const handleOnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      setScrollOffset(event.nativeEvent.contentOffset.y);
+    };
+  
+    const handleScrollTo = (p: { x?: number; y?: number; animated?: boolean }) => {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo(p);
+      }
+    };
+    
+  
 
   const handleSort = (criteria: 'name' | 'species') => {
     const sortedImages = [...images].sort((a, b) => a[criteria].localeCompare(b[criteria]));
@@ -102,34 +118,56 @@ export default function GardenScreen() {
 <Modal
   isVisible={modalVisible}
   onSwipeComplete={() => setModalVisible(false)}
-  swipeDirection="down"
+  swipeDirection={['down']}
+  scrollTo={handleScrollTo}
+  scrollOffset={scrollOffset}
+  propagateSwipe={true}
+  scrollOffsetMax={400} // Adjust based on your content height
   style={styles.modalStyle}
   onBackdropPress={() => setModalVisible(false)}
 >
   <View style={styles.modalContent}>
-    {selectedImage && (
-      <>
-        <ScrollView contentContainerStyle={styles.scrollViewContent}>
-          <Image source={{ uri: selectedImage.uri }} style={styles.fullImage} />
-          <Text style={styles.modalText}>Plant Species: {selectedImage.species}</Text>
-          {/* Add more content here */}
-        </ScrollView>
-        <View style={styles.modalButtonContainer}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setModalVisible(false)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDeleteImage}
-          >
-            <Text style={styles.deleteButtonText}>Delete</Text>
-          </TouchableOpacity>
-        </View>
-      </>
-    )}
+  {selectedImage && (
+  <>
+    <ScrollView
+      ref={scrollViewRef}
+      onScroll={handleOnScroll}
+      scrollEventThrottle={16}
+      contentContainerStyle={styles.scrollViewContent}
+    >
+      <Image source={{ uri: selectedImage.uri }} style={styles.fullImage} />
+      <Text style={styles.modalText}>Plant Name: {selectedImage.name}</Text>
+
+      <Text style={styles.modalText}>Plant Species: {selectedImage.species}</Text>
+
+
+    <Text style={styles.modalText}>Description: {selectedImage.description || 'Description not available'}</Text>
+    <Text style={styles.modalText}>Watering: {selectedImage.watering || 'Watering information not available'}</Text>
+    <Text style={styles.modalText}>Water every: {selectedImage.wateringValue || 'N/A'} {selectedImage.wateringUnit || ''}</Text>
+    <Text style={styles.modalText}>Poisonous to Humans: {selectedImage.poisonousToHumans ? 'Yes' : 'No information'}</Text>
+    <Text style={styles.modalText}>Poisonous to Pets: {selectedImage.poisonousToPets ? 'Yes' : 'No information'}</Text>
+    <Text style={styles.modalText}>Scientific Name: {selectedImage.scientificName || 'Scientific name not available'}</Text>
+    <Text style={styles.modalText}>Family: {selectedImage.family || 'Family information not available'}</Text>
+    <Text style={styles.modalText}>Sunlight: {selectedImage.sunlight || 'Sunlight requirements not available'}</Text>
+
+    </ScrollView>
+    <View style={styles.modalButtonContainer}>
+      <TouchableOpacity
+        style={styles.closeButton}
+        onPress={() => setModalVisible(false)}
+      >
+        <Text style={styles.closeButtonText}>Close</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={handleDeleteImage}
+      >
+        <Text style={styles.deleteButtonText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
+  </>
+)}
+
   </View>
 </Modal>
 
