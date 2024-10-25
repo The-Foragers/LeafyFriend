@@ -10,7 +10,16 @@ export const createTable = async () => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
       uri TEXT,
-      species TEXT
+      species TEXT,
+      description TEXT,
+      watering TEXT,
+      wateringValue REAL,
+      wateringUnit TEXT,
+      poisonousToHumans INTEGER,
+      poisonousToPets INTEGER,
+      scientificName TEXT,
+      family TEXT,
+      sunlight TEXT
     );
   `);
 };
@@ -24,14 +33,23 @@ export const updateTableSchema = async () => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
       uri TEXT,
-      species TEXT
+      species TEXT,
+      description TEXT,
+      watering TEXT,
+      wateringValue REAL,
+      wateringUnit TEXT,
+      poisonousToHumans INTEGER,
+      poisonousToPets INTEGER,
+      scientificName TEXT,
+      family TEXT,
+      sunlight TEXT
     );
   `);
 
   // Copy data from old table to new table
   await db.execAsync(`
-    INSERT INTO images_new (id, name, uri, species)
-    SELECT id, name, uri, species FROM images;
+    INSERT INTO images_new (id, name, uri)
+    SELECT id, name, uri FROM images;
   `);
 
   // Drop the old table
@@ -45,9 +63,43 @@ export const updateTableSchema = async () => {
 updateTableSchema();
 
 // Insert an image into the database
-export const insertImage = async (name: string, uri: string, species: string) => {
+export const insertImage = async (
+  name: string,
+  uri: string,
+  species: string,
+  description?: string,
+  watering?: string,
+  wateringValue?: number,
+  wateringUnit?: string,
+  poisonousToHumans?: boolean,
+  poisonousToPets?: boolean,
+  scientificName?: string,
+  family?: string,
+  sunlight?: string
+) => {
   const db = await dbPromise;
-  await db.runAsync('INSERT INTO images (name, uri, species) VALUES (?, ?, ?);', [name, uri, species]);
+  const params = [
+    name,
+    uri,
+    species,
+    description ?? null,
+    watering ?? null,
+    wateringValue ?? null,
+    wateringUnit ?? null,
+    poisonousToHumans ? 1 : 0, // Convert boolean to integer
+    poisonousToPets ? 1 : 0,   // Convert boolean to integer
+    scientificName ?? null,
+    family ?? null,
+    sunlight ?? null,
+  ];
+
+  await db.runAsync(
+    `INSERT INTO images 
+      (name, uri, species, description, watering, wateringValue, wateringUnit, 
+       poisonousToHumans, poisonousToPets, scientificName, family, sunlight) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    params
+  );
 };
 
 // Get all images from the database
