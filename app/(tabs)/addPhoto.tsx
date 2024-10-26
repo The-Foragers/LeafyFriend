@@ -387,9 +387,6 @@ useEffect(() => {
     }
   };
   
-  
-  
-
   const renderOrganSelectionModal = () => (
     <Modal
       visible={isOrganModalVisible}
@@ -420,9 +417,7 @@ useEffect(() => {
     </Modal>
   );
   
-
-
-
+// end of organ modal
 
 /*Screen UI
 StyleSheet is in app/res/styles/addPhotoStyles */
@@ -433,38 +428,152 @@ StyleSheet is in app/res/styles/addPhotoStyles */
 
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
 
-        <View style={styles.container}>
-          {/* Image, Title, and Information Display */}
-          <View style={[styles.imageContainer, { height: imageHeight }]}>
-            {image ? (
-              <Image source={{ uri: image }} style={styles.previewImage} />
-            ) : (
-              <Text style={styles.noImageText}>No image selected yet</Text>
-            )}
-          </View>
-            
-          {/* Plant text and information */}
-               <View style={styles.textContainer}>
-                 <TextInput
-                   style={styles.mainText}
-                   placeholder="Enter plant name"
-                   value={plantName}
-                   onChangeText={setPlantName}
-                 />
 
-                 {/* Row layout for species name and button */}
-                 <View style={styles.speciesRow}>
-                   <Text style={styles.secondaryText}>{plantSpecies}</Text>
+      <View style={styles.container}>
+  {/* Image, Title, and Information Display */}
+  <View style={[styles.imageContainer, { height: imageHeight }]}>
+    {image ? (
+      <>
+        {/* Display the plant image */}
+        <Image source={{ uri: image }} style={styles.previewImage} />
+
+        {/* Plant text and information */}
+        <View style={styles.textContainer}>
+          <TextInput
+            style={styles.mainText}
+            placeholder="Enter plant name"
+            value={plantName}
+            onChangeText={setPlantName}
+          />
+
+          {/* Plant Species Information */}
+          <Text style={styles.modalText}>
+    {`Confidence: ${highestConfidence ? `${highestConfidence}%` : 'Unknown'}`}
+  </Text>
+        </View>
+      </>
+    ) : (
+      <>
+        {/* Display the preview image */}
+        <Image
+          source={require('../../assets/images/LeafyFriendsLogo.jpg')}
+          style={styles.previewImage}
+        />
+
+        {/* Welcome message 
+        
+                <View style={styles.welcomeContainer}>
+          <Text style={styles.welcomeText}>Welcome, Leafy Friends!</Text>
+        </View>
+        
+        
+        */}
+
+      </>
+    )}
+  </View>
 
 
-                 </View>
-               </View>
+
+
+    {speciesData ? (
+    
+
+             
+  <View style={styles.speciesInfoContainer}>
+    <Text style={styles.speciesDataTitle}>Plant Information:</Text>
+    
+{/* Scientific Info Container */}
+<View style={styles.infoContainer}>
+  <Text style={styles.infoTitle}>Scientific Info</Text>
+
+  {/* Scientific Name and Family */}
+  <Text style={styles.modalText}>
+    {`Scientific Name: ${speciesData?.scientific_name || plantSpecies || 'Unknown'}`}
+  </Text>
+  <Text style={styles.modalText}>
+    {`Family: ${speciesData?.family || 'Unknown'}`}
+  </Text>
+  <Text style={styles.modalText}>
+    {`Common Name: ${commonName || 'Unknown'}`}
+  </Text>
+
+</View>
+
+
+    {/* Care Info Container */}
+    <View style={styles.infoContainer}>
+      <Text style={styles.infoTitle}>Care</Text>
+      <Text style={styles.modalText}>
+        {`Watering: ${speciesData?.watering || 'Unknown'}`}
+      </Text>
+      <Text style={styles.modalText}>
+        {`Water every: ${speciesData?.watering_general_benchmark?.value || 'Unknown'} ${speciesData?.watering_general_benchmark?.unit || 'Unknown'}`}
+      </Text>
+      <Text style={styles.modalText}>
+        {`Sunlight: ${speciesData?.sunlight || 'Unknown'}`}
+      </Text>
+    </View>
+
+    {/* Toxicity Info Container */}
+    <View style={styles.infoContainer}>
+      <Text style={styles.infoTitle}>Toxicity</Text>
+      <Text style={styles.modalText}>
+        {`Poisonous to Humans: ${speciesData?.poisonousToHumans ? 'Yes' : 'No'}`}
+      </Text>
+      <Text style={styles.modalText}>
+        {`Poisonous to Pets: ${speciesData?.poisonousToPets ? 'Yes' : 'No'}`}
+      </Text>
+    </View>
+
+
+
+
+        {/* Description */}
+        <View style={styles.infoContainer}>
+      <Text style={styles.infoTitle}>Description</Text>
+      <Text style={styles.modalText}>
+        {speciesData?.description ? `${speciesData.description}` : 'Unknown'}
+      </Text>
+    </View>
+
+  </View>
+
+
+
+                ) : (
+  <View style={styles.emptyContainer}>
+
+  </View>
+)}
+
+
+                
+                
+          
+
+
+
+
                 {/* Plant Results Information */}
-                         {plantSpecies !== 'Unknown' && (
+                {plantSpecies !== 'Unknown' && (
                            <View style={styles.plantInfoContainer}>
-                             <Text style={styles.plantInfoText}>Scientific Name: {plantSpecies}</Text>
-                             <Text style={styles.plantInfoText}>Common Name: {commonName}</Text>
+
                              <Text style={styles.plantInfoText}>Confidence: {(highestConfidence)}%</Text>
+                             <Text style={styles.plantInfoText}>Doesn't look the same?</Text>
+
+                             {plantSpecies !== 'Unknown' && (
+                           <View style={styles.buttonContainer}>
+                             <Button
+                               mode="contained-tonal"
+                               onPress={() => handleAddPhotoPress()}
+                               style={styles.resetButton}
+                             >
+                               Try again
+                             </Button>
+                           </View>
+                         )}
+                             
                              {plantImages.length > 0 && (
                                <View style={styles.imageNavigationContainer}>
                                  <TouchableOpacity onPress={handlePrevImage} style={styles.arrowButton}>
@@ -478,75 +587,8 @@ StyleSheet is in app/res/styles/addPhotoStyles */
                              )}
                            </View>
                          )}
-                         {plantSpecies !== 'Unknown' && (
-                           <View style={styles.buttonContainer}>
-                             <Button
-                               mode="contained-tonal"
-                               onPress={() => handleAddPhotoPress()}
-                               style={styles.resetButton}
-                             >
-                               Doesn't look the same? Try another angle
-                             </Button>
-                           </View>
-                         )}
 
 
-               {speciesData ? (
-                 <View style={styles.speciesInfoContainer}>
-                   <Text style={styles.speciesDataTitle}>Species Information:</Text>
-                   <View style={styles.container}>
-                     <Text style={styles.modalText}>
-                       Description: {speciesData?.description || 'Unknown'}
-                     </Text>
-                     <Text style={styles.modalText}>
-                       Watering: {speciesData.watering || 'Unknown'}
-                     </Text>
-                     <Text style={styles.modalText}>
-                       Water every: {speciesData.watering_general_benchmark?.value || 'Unknown'}{' '}
-                       {speciesData.watering_general_benchmark?.unit || 'Unknown'}
-                     </Text>
-                     <Text style={styles.modalText}>
-                       Poisonous to Humans: {speciesData.poisonousToHumans ? 'Yes' : 'No'}
-                     </Text>
-                     <Text style={styles.modalText}>
-                       Poisonous to Pets: {speciesData.poisonousToPets ? 'Yes' : 'No'}
-                     </Text>
-                     <Text style={styles.modalText}>
-                       Scientific Name: {speciesData.scientific_name || 'Unknown'}
-                     </Text>
-                     <Text style={styles.modalText}>
-                       Family: {speciesData.family || 'Unknown'}
-                     </Text>
-                     <Text style={styles.modalText}>
-                       Sunlight: {speciesData.sunlight || 'Unknown'}
-                     </Text>
-                   </View>
-                 </View>
-               ) : (
-               <View style={styles.speciesInfoContainer}>
-                <Text style={styles.speciesDataTitle}>Species Information:</Text>
-                 <Text style={styles.modalText}>No information available.</Text>
-                </View>
-               )}
-
-          {/* Save to Garden Button */}
-          <Button
-            mode="contained-tonal"
-            onPress={handleSaveToGarden}
-            disabled={!image} // Disable button if no image is loaded
-            style={styles.saveGardenButton}
-          >
-            Save to Garden
-          </Button>
-
-          {/* Add Photo Button */}
-          <Button
-            mode="contained-tonal"
-            onPress={handleAddPhotoPress}
-            style={styles.addPhotoButton}
-          >
-            Scan Plant
-          </Button>
 
 
 
@@ -564,12 +606,29 @@ StyleSheet is in app/res/styles/addPhotoStyles */
         </View>
       </ScrollView>
 
+
+{/*Buttons for Add Photo and Save to Garden
+** The are contained outside the ScrollView to ensure they are always visible */}
         <Button
-        mode="outlined"
-        onPress={resetState}
-        style={styles.resetButton}>
-              Try Again!
-            </Button>
+          mode="contained-tonal"
+          onPress={handleSaveToGarden}
+          disabled={!image} // Disable button if no image is loaded
+          style={styles.saveGardenButton}
+        >
+          Save to Garden
+        </Button>
+
+        {/* Add Photo Button */}
+        <Button
+          mode="contained-tonal"
+          onPress={() => {
+            resetState();
+            handleAddPhotoPress();
+          }}
+          style={styles.addPhotoButton}
+        >
+          Scan Plant
+        </Button>
 
       {renderOrganSelectionModal()}
       {/*}{renderResultSelectionModal()}*/}

@@ -7,7 +7,7 @@ export const makeStyles = (theme: MD3Theme) =>
     scrollViewContent: {
       flexGrow: 1,
       justifyContent: 'space-between',
-      padding: 16,
+      padding: 0,
     },
     container: {
       flex: 1,
@@ -18,6 +18,7 @@ export const makeStyles = (theme: MD3Theme) =>
     },
     imageContainer: {
       width: '100%',
+      
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: 0,
@@ -39,6 +40,22 @@ export const makeStyles = (theme: MD3Theme) =>
       width: '100%',
       paddingHorizontal: 10,
       marginBottom: 60,
+    },
+
+
+    welcomeContainer: {
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: [{ translateX: -50 }, { translateY: -50 }],
+      alignItems: 'center',
+    },
+    
+    welcomeText: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: theme.colors.primary,
+      textAlign: 'left',
     },
   
     //Plant text and information
@@ -109,14 +126,60 @@ export const makeStyles = (theme: MD3Theme) =>
 
       },
       speciesInfoContainer: {
-
         flex: 1,
-        justifyContent: 'center',
+        padding: 0, // Adjusted padding for better spacing
+        marginBottom: 20, // Added margin to separate from other content
+        borderRadius: 10, // Added to match info containers style
+        width: '100%', // Ensure it takes the full width
+      },
+      infoContainer: {
+        backgroundColor: theme.colors.surface,
+        padding: 15,
+        borderRadius: 10,
+        marginVertical: 10,
+        width: '100%', // Ensure it takes the full width
+        alignSelf: 'stretch', // Stretch to fill the container
+        shadowColor: '#000', // Added shadow for consistency with other elements
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        elevation: 3,
+      },
+      plantNameText: {
+        fontSize: 24, // Make it larger for emphasis
+        fontWeight: 'bold',
+        color: theme.colors.primary,
+        textAlign: 'center',
+        marginVertical: 10,
+      },
+      
+      modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 5,
-        backgroundColor: theme.colors.background,
-        marginBottom: 40,
-        },
+        width: '100%',
+        paddingHorizontal: 10,
+        backgroundColor: 'transparent', // Ensure no background color clashes
+      },
+      
+      modalText: {
+        fontSize: 16, // Adjusted for readability
+        lineHeight: 22,
+        color: theme.colors.onSurface,
+        marginVertical: 5, // Adjusted for consistent spacing
+        textAlign: 'left',
+      },
+      
+      
+      
+      infoTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#555',
+        marginBottom: 5,
+      },
+      
+
         speciesRow: {
           flexDirection: 'row',
           alignItems: 'center',
@@ -263,10 +326,9 @@ export const makeStyles = (theme: MD3Theme) =>
       },
       speciesDataTitle: {
         fontSize: 20,
+        paddingTop: 10,
+        paddingBottom: 5,
         fontWeight: 'bold',
       },
-      modalText: {
-        fontSize: 16,
-        marginVertical: 5,
-      },
+
   });
