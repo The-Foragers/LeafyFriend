@@ -180,18 +180,20 @@ export default function AddPhotoScreen() {
               const family = speciesData?.family || 'Unknown';
               const sunlight = speciesData?.sunlight || 'Unknown';
         // Insert the image URI into the database
-        await insertImage(  plantName,
-                                  image,
-                                  plantSpecies || 'Unknown', // Use 'Unknown' if plantSpecies is not defined
-                                  description,
-                                  watering,
-                                  wateringValue,
-                                  wateringUnit,
-                                  poisonousToHumans,
-                                  poisonousToPets,
-                                  scientificName,
-                                  family,
-                                  sunlight);
+        await insertImage(
+          plantName,
+          image,
+          plantSpecies || 'Unknown',
+          description,
+          watering,
+          wateringValue,
+          wateringUnit,
+          poisonousToHumans,
+          poisonousToPets,
+          scientificName,
+          family,
+          sunlight
+        );
         setLoadingMessage('Saving to garden...');
 
         // Fetch the updated list of images
@@ -356,6 +358,7 @@ useEffect(() => {
     }
   };
 
+  /*Modal for organ selection and plant image routes */
   const handleNextImage = () => {
     if (plantImages.length > 0) {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % plantImages.length);

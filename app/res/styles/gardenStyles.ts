@@ -1,8 +1,11 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 import { MD3Theme } from 'react-native-paper';
 
+const { width, height } = Dimensions.get('window');
 export const makeStyles = (theme: MD3Theme) =>
   StyleSheet.create({
+
+    /* Styles for the Garden Screen */
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
@@ -51,21 +54,28 @@ export const makeStyles = (theme: MD3Theme) =>
         color: '#777', // Lighter text for the plant type
       },
 
+      sortButton: {
+        margin: 10,
+        padding: 10,
+        backgroundColor: theme.colors.primary,
+      },
+/* End of Styles for the Garden Screen */
 
-      // ... other existing styles
+
+
+/* Modal to display individual plant information */
       modalView: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
       },
-      // New styles for the modal
       modalStyle: {
         justifyContent: 'flex-end',
         margin: 0,
       },
       modalContent: {
-        backgroundColor: theme.colors.surface,
+        backgroundColor: theme.colors.background,
         padding: 20,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
@@ -76,10 +86,10 @@ export const makeStyles = (theme: MD3Theme) =>
       },
       fullImage: {
         width: '100%',
-        height: 300,
+        height: height * 0.5, // Adjust the height based on screen height
         resizeMode: 'contain',
         borderRadius: 10,
-        marginBottom: 20,
+        marginBottom: 0,
       },
       modalText: {
         fontSize: 18,
@@ -101,7 +111,7 @@ export const makeStyles = (theme: MD3Theme) =>
       },
       closeButtonText: {
         color: 'white',
-        fontSize: 16,
+        fontSize: 30,
         textAlign: 'center',
         fontWeight: 'bold',
       },
@@ -119,10 +129,63 @@ export const makeStyles = (theme: MD3Theme) =>
         fontWeight: 'bold',
       },
 
+      modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        width: '100%',
+        paddingHorizontal: 10,
+        marginBottom: 0,
+        backgroundColor:'transparent',
+      },
+      topCloseButton: {
+        backgroundColor: 'transparent',
+      },
+      menuButton: {
+        backgroundColor: 'transparent',
+      },
+      menuIconText: {
+        fontSize: 24, // Adjust this as needed
+        color: '#333',
+        fontWeight: 'bold',
+      },
+      
 
-    sortButton: {
-      margin: 10,
-      padding: 10,
-      backgroundColor: theme.colors.primary,
-    },
+      topCloseButtonText: {
+        fontSize: 30,
+        color: '#333', // Adjust color as needed
+        fontWeight: 'bold',
+      },
+      
+      plantNameText: {
+        fontSize: 24, // Make it larger
+        fontWeight: 'bold',
+        color: theme.colors.primary,
+        textAlign: 'center',
+        marginVertical: 10,
+      },
+      infoContainer: {
+        backgroundColor: theme.colors.surface,
+        padding: 15,
+        borderRadius: 10,
+        marginVertical: 10,
+        width: '100%',
+      },
+      infoTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: theme.colors.onSurface,
+        marginBottom: 5,
+      },
+      modalText: {
+        fontSize: 16, // Adjusted for readability
+        color: theme.colors.onSurface,
+        marginVertical: 2,
+        textAlign: 'left',
+      },
+      
+
+
+/* End of Modal for individual plant information*/
+
   });
