@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Leafy Friends",
-    "slug": "Leafy Friends",
+    "slug": "leafyfriends",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,7 +19,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.theForagers.LeafyFriends"
     },
     "web": {
       "bundler": "metro",
@@ -31,6 +32,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ddd72ceb-7a4e-433b-98cc-671e4e76e21e"
+      }
+    },
+    "owner": "edyspagetti"
   }
 }

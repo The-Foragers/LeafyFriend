@@ -44,17 +44,23 @@ export const makeStyles = (theme: MD3Theme) =>
 
 
     welcomeContainer: {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: [{ translateX: -50 }, { translateY: -50 }],
-      alignItems: 'center',
+      //backgroundColor: theme.colors.surface,
+      padding: 15,
+      borderRadius: 10,
+      marginVertical: 10,
+      width: '100%', // Ensure it takes the full width
+      alignSelf: 'stretch', // Stretch to fill the container
+      shadowColor: '#000', // Added shadow for consistency with other elements
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      //shadowRadius: 2,
+      //elevation: 3,
     },
     
     welcomeText: {
       fontSize: 24,
       fontWeight: 'bold',
-      color: theme.colors.primary,
+      color: theme.colors.onBackground,
       textAlign: 'left',
     },
   

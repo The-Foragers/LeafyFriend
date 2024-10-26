@@ -538,15 +538,22 @@ StyleSheet is in app/res/styles/addPhotoStyles */
     </View>
 
   </View>
-
-
-
-                ) : (
-  <View style={styles.emptyContainer}>
-
+) : image ? (
+  <View style={styles.infoContainer}>
+    <Text style={styles.modalText}>
+      {`Common Name: ${commonName || 'Unknown'}`}
+    </Text>
+    <Text style={styles.modalText}>
+      No further information available
+    </Text>
+  </View>
+) : (
+  <View style={styles.welcomeContainer}>
+    <Text style={styles.welcomeText}>
+      Welcome, Leafy Friends!
+    </Text>
   </View>
 )}
-
 
                 
                 
