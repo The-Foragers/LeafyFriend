@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const fetchPlantInfoByID = async (speciesId) => {
-  const apiKey = 'sk-4Xys67158fb05ce2d7246'; // Your API key
+  const apiKey = 'sk-LbAA671c49197bac47434'; // Your API key
   const url = `https://perenual.com/api/species/details/${speciesId}?key=${apiKey}`;
 
   try {
