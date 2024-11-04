@@ -59,11 +59,11 @@ Return only the JSON object and no additional text.`;
 
   const json = await response.json();
   let output = json.choices[0]?.message?.content;  // Changed 'const' to 'let'
-  output = output.replace(/```json|```/g, '');
-  
+  output = output.replace(/```+json|```+/g, '');
+  //output = output.replace(/json|/g, ''); this is the old line
   // Log the output to understand what was received
   console.log('Raw LLM response:', output);
-
+//
   try {
     // Try parsing the output as JSON
     const plantInfo: PlantInfo = JSON.parse(output);

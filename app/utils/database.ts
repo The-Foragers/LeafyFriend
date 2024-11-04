@@ -6,7 +6,7 @@ const dbPromise = SQLite.openDatabaseAsync('garden.db');
 export const createTable = async () => {
   const db = await dbPromise;
   // Drop the old table if it exists
-  await db.execAsync('DROP TABLE IF EXISTS images;');
+  //await db.execAsync('DROP TABLE IF EXISTS images;');
 
   // Create the new table with the updated schema
   await db.execAsync(`
