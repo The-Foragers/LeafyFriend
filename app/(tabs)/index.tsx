@@ -25,13 +25,12 @@ export default function GardenScreen() {
   const [plantInfo, setPlantInfo] = useState<{
     description?: string;
     watering?: string;
-    wateringValue?: string;
-    wateringUnit?: string;
-    poisonousToHumans?: boolean;
-    poisonousToPets?: boolean;
+    poisonousToHumans?: string;
+    poisonousToPets?: string;
     scientificName?: string;
     family?: string;
     sunlight?: string;
+    additionalCareTips?: string;//new
   } | null>(null);
   
   useFocusEffect(
@@ -46,13 +45,12 @@ export default function GardenScreen() {
     species: string,
     description?: string,
     watering?: string,
-    wateringValue?: string,
-    wateringUnit?: string,
-    poisonousToHumans?: boolean,
-    poisonousToPets?: boolean,
+    poisonousToHumans?: string,
+    poisonousToPets?: string,
     scientificName?: string,
     family?: string,
-    sunlight?: string
+    sunlight?: string,
+    additionalCareTips?: string,//new
   }) => {
     setSelectedImage(image);
     setModalVisible(true);
@@ -60,13 +58,12 @@ export default function GardenScreen() {
     setPlantInfo({
       description: image.description || 'Description not available',
       watering: image.watering || 'Watering information not available',
-      wateringValue: image.wateringValue || 'N/A',
-      wateringUnit: image.wateringUnit || '',
-      poisonousToHumans: image.poisonousToHumans || false,
-      poisonousToPets: image.poisonousToPets || false,
+      poisonousToHumans: image.poisonousToHumans || 'toxicity not available',
+      poisonousToPets: image.poisonousToPets || 'toxicity not available',
       scientificName: image.scientificName || 'Scientific name not available',
       family: image.family || 'Family information not available',
-      sunlight: image.sunlight || 'Sunlight requirements not available'
+      sunlight: image.sunlight || 'Sunlight requirements not available',
+      additionalCareTips: image.additionalCareTips || 'Additional care tips not available' //new
     });
   };
   
@@ -241,14 +238,15 @@ export default function GardenScreen() {
   <Text style={styles.infoTitle}>Care</Text>
   <Text style={styles.modalText}>Sunlight: {plantInfo?.sunlight}</Text>
   <Text style={styles.modalText}>Watering: {plantInfo?.watering}</Text>
-  <Text style={styles.modalText}>Water every: {plantInfo?.wateringValue} {plantInfo?.wateringUnit}</Text>
+  <Text style={styles.modalText}>Additional Care Tips: {plantInfo?.additionalCareTips}</Text>
+  {/*<Text style={styles.modalText}>Water every: {plantInfo?.wateringValue} {plantInfo?.wateringUnit}</Text> took this out*/}
 </View>
 
 {/* Toxicity Info Container */}
 <View style={styles.infoContainer}>
   <Text style={styles.infoTitle}>Toxicity</Text>
-  <Text style={styles.modalText}>Poisonous to Humans: {plantInfo?.poisonousToHumans ? 'Yes' : 'No information'}</Text>
-  <Text style={styles.modalText}>Poisonous to Pets: {plantInfo?.poisonousToPets ? 'Yes' : 'No information'}</Text>
+  <Text style={styles.modalText}>Poisonous to Humans: {plantInfo?.poisonousToHumans} </Text>
+  <Text style={styles.modalText}>Poisonous to Pets: {plantInfo?.poisonousToPets} </Text>
 </View>
 
 {/* Description */}
