@@ -61,7 +61,36 @@ export const makeStyles = (theme: MD3Theme) =>
       },
 /* End of Styles for the Garden Screen */
 
+/* Menu modal to change name, photo etc*/
+menuModalContainer: {
+  flex: 1,
+  justifyContent: 'flex-end', // Align it to the bottom
+  backgroundColor: theme.colors.background, // Similar background overlay
+},
+menuModalContent: {
+  backgroundColor: theme.colors.background, // Use main modal's background color
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+  padding: 20,
+  width: '100%',
+  maxHeight: '50%', // Make it smaller than the main modal
+  alignItems: 'center',
+},
+menuItem: {
+  paddingVertical: 10,
+  alignItems: 'center',
+  width: '100%',
+  borderBottomWidth: 1,
+  borderBottomColor: theme.colors.surfaceVariant, // Divider line
+},
+menuItemText: {
+  fontSize: 16,
+  color: theme.colors.onSurface,
+  textAlign: 'center',
+  paddingVertical: 8,
+},
 
+/*end of Menu modal for individual plants */
 
 /* Modal to display individual plant information */
       modalView: {
@@ -184,8 +213,6 @@ export const makeStyles = (theme: MD3Theme) =>
         textAlign: 'left',
       },
       
-
-
 /* End of Modal for individual plant information*/
 
   });

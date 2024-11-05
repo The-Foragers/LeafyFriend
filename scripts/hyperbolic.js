@@ -22,7 +22,7 @@ export async function fetchPlantInfo(plantSpecies: string): Promise<PlantInfo | 
 
 Please return the response as a JSON object with the following keys:
 1. "description": A brief overview of the plant, including its common appearance and any unique characteristics.
-2. "watering": Recommended watering frequency and quantity, including any seasonal adjustments.
+2. "watering": "Provide a detailed watering schedule for the plant. Specify the frequency (daily, weekly, etc.), the amount of water needed, and specific seasonal needs. Format the response as follows: 'Water every X days/weeks during [season], and [frequency] during [season]. Adjust watering to [condition] during [specific condition].'"
 3. "sunlight": Ideal lighting conditions (e.g., direct sunlight, partial shade).
 4. "poisonousToHumans": Is this plant toxic to humans? Provide details if it is.
 5. "poisonousToPets": Is this plant toxic to pets? Provide details if it is.
