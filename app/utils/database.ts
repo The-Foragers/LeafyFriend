@@ -49,10 +49,24 @@ export const insertImage = async (
 };
 
 // Get all images from the database
-export const getImages = async (callback: (images: { name: string, uri: string, species: string, description: string, watering: string, poisonousToHumans: string, poisonousToPets: string, scientificName: string, family: string, sunlight: string, additionalCareTips: string }[]) => void) => {
+export const getImages = async (callback: (images: {
+  id: number, // Include id in the type definition
+  name: string,
+  uri: string,
+  species: string,
+  description: string,
+  watering: string,
+  poisonousToHumans: string,
+  poisonousToPets: string,
+  scientificName: string,
+  family: string,
+  sunlight: string,
+  additionalCareTips: string
+}[]) => void) => {
   const db = await dbPromise;
-  const rows: { name: string, uri: string, species: string, description: string, watering: string, poisonousToHumans: string, poisonousToPets: string, scientificName: string, family: string, sunlight: string, additionalCareTips: string }[] = await db.getAllAsync('SELECT * FROM images;');
+  const rows = await db.getAllAsync('SELECT * FROM images;');
   const images = rows.map(row => ({
+    id: row.id, // Include id in the mapped data
     name: row.name,
     uri: row.uri,
     species: row.species,
@@ -68,11 +82,39 @@ export const getImages = async (callback: (images: { name: string, uri: string, 
   callback(images);
 };
 
-// Delete an image from the database
-export const deleteImage = async (uri: string) => {
+// Update a plant's name in the database
+export const updatePlantName = async (id: number, newName: string) => {
   const db = await dbPromise;
-  await db.runAsync('DELETE FROM images WHERE uri = ?;', [uri]);
+  try {
+    await db.runAsync('UPDATE images SET name = ? WHERE id = ?;', [newName, id]);
+    console.log(`Successfully updated plant with ID ${id} to new name: ${newName}`);
+    return true; // Return true if the update was successful
+  } catch (error) {
+    console.error("Failed to update plant name:", error);
+    return false; // Return false if there was an error
+  }
 };
+//update the plant picture
+export const updatePlantImage = async (id: number, newUri: string) => {
+  const db = await dbPromise;
+  try {
+    await db.runAsync('UPDATE images SET uri = ? WHERE id = ?;', [newUri, id]);
+    console.log(`Successfully updated plant with ID ${id} to new image URI: ${newUri}`);
+    return true;
+  } catch (error) {
+    console.error("Failed to update plant image:", error);
+    return false;
+  }
+};
+
+
+// Delete an image from the database
+// Delete an image from the database
+export const deleteImage = async (id: number) => {
+  const db = await dbPromise;
+  await db.runAsync('DELETE FROM images WHERE id = ?;', [id]);
+};
+
 
 // Check the table schema
 export const checkTableSchema = async () => {

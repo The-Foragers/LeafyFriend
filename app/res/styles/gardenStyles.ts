@@ -92,6 +92,45 @@ menuItemText: {
 
 /*end of Menu modal for individual plants */
 
+/*Modal to edit plant information */
+renameModalContainer: {
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: 'rgba(0, 0, 0, 0.0)',
+},
+renameModalContent: {
+  width: '80%',
+  backgroundColor: theme.colors.background,
+  borderRadius: 10,
+  padding: 20,
+  alignItems: 'center',
+},
+renameModalTitle: {
+  fontSize: 20,
+  fontWeight: 'bold',
+  marginBottom: 20,
+  color: theme.colors.inverseSurface,
+},
+textInput: {
+  width: '100%',
+  height: 40,
+  borderColor: theme.colors.primary,
+  borderWidth: 1,
+  borderRadius: 5,
+  paddingHorizontal: 10,
+  marginBottom: 20,
+},
+buttonContainer: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  width: '100%',
+},
+button: {
+  flex: 1,
+  marginHorizontal: 5,
+},
+
 /* Modal to display individual plant information */
       modalView: {
         flex: 1,

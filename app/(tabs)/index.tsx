@@ -1,20 +1,20 @@
 import React, { useCallback, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, NativeSyntheticEvent, NativeScrollEvent, Dimensions } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, NativeSyntheticEvent, NativeScrollEvent, Dimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { getImages, deleteImage } from '@/app/utils/database';
+import { getImages, deleteImage, updatePlantName as updatePlantNameInDB, updatePlantImage } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
 import { Button, Menu, Provider as PaperProvider, useTheme } from 'react-native-paper';
 import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
 import Modal from 'react-native-modal';
 import Icon from 'react-native-ionicons';
+import * as ImagePicker from 'expo-image-picker';
 
 
 export default function GardenScreen() {
   const theme = useTheme();
   const styles = makeStyles(theme);
-  const [images, setImages] = useState<{ name: string, uri: string, species: string }[]>([]);
+  const [images, setImages] = useState<{ id: number; name: string; uri: string; species: string }[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<{ name: string, uri: string, species: string } | null>(null);
   const [sortMenuVisible, setSortMenuVisible,] = useState(false);
   const {width, height } = Dimensions.get('window');
   const scrollViewRef = useRef<ScrollView | null>(null);
@@ -23,8 +23,26 @@ export default function GardenScreen() {
      This is set up this way to avoid two modal open at the same time which causes  a bug
      It will first close which ever modal is open and then open a new one
      */
-    const [menuModalVisible, setMenuModalVisible] = useState(false);
     const [openNextModal, setOpenNextModal] = useState(false); // Flag to open next modal after closing the first
+    /*Modal, modal and more modal */
+    const [openWateringScheduleNext, setOpenWateringScheduleNext] = useState(false); // New flag for the watering schedule
+    const [wateringScheduleModalVisible, setWateringScheduleModalVisible] = useState(false);
+    const [menuModalVisible, setMenuModalVisible] = useState(false); //settings menu for each plant
+
+    /*To allow user to change plant images after saving to garden */
+    const [selectedImage, setSelectedImage] = useState<{ id: number; name: string; uri: string; species: string } | null>(null);
+    const [newPlantName, setNewPlantName] = useState('');
+    const [newImageUri, setNewImageUri] = useState('');
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [openEditModalNext, setOpenEditModalNext] = useState(false); // Flag for opening edit modal after closing current
+    
+    useFocusEffect(
+      useCallback(() => {
+        getImages(setImages);
+      }, [])
+    );
+
+
 
   //used for scrollview in plant modal:
 
@@ -39,13 +57,9 @@ export default function GardenScreen() {
     additionalCareTips?: string;//new
   } | null>(null);
   
-  useFocusEffect(
-    useCallback(() => {
-      getImages(setImages);
-    }, [])
-  );
 
   const handleImageClick = (image: { 
+    id: number, // Include id
     name: string, 
     uri: string, 
     species: string,
@@ -56,8 +70,9 @@ export default function GardenScreen() {
     scientificName?: string,
     family?: string,
     sunlight?: string,
-    additionalCareTips?: string,//new
+    additionalCareTips?: string,
   }) => {
+    console.log("Selected Image ID:", image.id); // Now image.id is defined
     setSelectedImage(image);
     setModalVisible(true);
 
@@ -81,16 +96,13 @@ export default function GardenScreen() {
         'Delete Image',
         'Are you sure you want to delete this image?',
         [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
+          { text: 'Cancel', style: 'cancel' },
           {
             text: 'Delete',
             style: 'destructive',
             onPress: () => {
-              deleteImage(selectedImage.uri);
-              setImages(images.filter(image => image.uri !== selectedImage.uri));
+              deleteImage(selectedImage.id); // Use id
+              setImages(images.filter(image => image.id !== selectedImage.id)); // Filtering by id
               setModalVisible(false);
             },
           },
@@ -99,6 +111,7 @@ export default function GardenScreen() {
       );
     }
   };
+  
 
     //
     const handleOnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -128,6 +141,83 @@ export default function GardenScreen() {
     setModalVisible(false); // Close main modal
   };
   
+  /*
+   * Watering Schedule Modal
+   */
+  const handleWateringSchedule = () => {
+    setOpenWateringScheduleNext(true); // Set flag to open watering schedule modal
+    setMenuModalVisible(false); // Close the menu modal
+  };
+  
+
+// Function to open the rename modal
+const openRenameModal = () => {
+  setOpenEditModalNext(true); // Set the flag to open the rename modal
+  setMenuModalVisible(false); // Close the menu modal
+};
+
+    // Rename Plant Handler
+
+    // Update plant name in the database
+    const updatePlantName = async (id, newName) => {
+      try {
+        console.log(`Updating plant with ID ${id} to new name: ${newName}`);
+        await updatePlantNameInDB(id, newName); // Call the database update function
+        return true; // Return true if the update was successful.
+      } catch (error) {
+        console.error("Failed to update plant name:", error);
+        return false; // Return false if there was an error.
+      }
+    };
+    
+
+    const handleRenamePlant = async () => {
+      if (selectedImage && newPlantName) {
+        const success = await updatePlantName(selectedImage.id, newPlantName);
+        if (success) {
+          setImages((prev) =>
+            prev.map((plant) =>
+              plant.id === selectedImage.id ? { ...plant, name: newPlantName } : plant
+            )
+          );
+          setEditModalVisible(false); // Close the rename modal
+          setNewPlantName('');        // Clear the input field
+        } else {
+          Alert.alert("Error", "Failed to rename plant. Please try again.");
+        }
+      } else {
+        Alert.alert("Error", "Please enter a valid name.");
+      }
+    };
+    
+    
+    
+
+    
+    const handleChangePhoto = async () => {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+      });
+    
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        setNewImageUri(uri);
+        if (selectedImage) {
+          await updatePlantImage(selectedImage.id, uri); // Use updatePlantImage
+          setImages((prev) =>
+            prev.map((plant) =>
+              plant.id === selectedImage.id ? { ...plant, uri } : plant
+            )
+          );
+        }
+        setMenuModalVisible(false); // Close the menu modal
+        setOpenEditModalNext(true); // Open the edit modal next
+      }
+    };
+    
+  
 
 
   /* 
@@ -138,22 +228,12 @@ export default function GardenScreen() {
     alert('Settings button pressed');
   };
 
-  const handleRenamePlant = () => {
-    // Logic to rename the plant
-    alert('Rename Plant selected');
-  };
   const handleWaterPlant = () => {
     // Logic to rename the plant
     alert('Plant Watered');
   };
-  const handleWateringSchedule = () => {
-    // Logic to rename the plant
-    alert('Rename Plant selected');
-  };
-  const handleChangePhoto = () => {
-    // Logic to change the plant photo
-    alert('Change Photo selected');
-  };
+
+
   
 
   return (
@@ -207,6 +287,7 @@ export default function GardenScreen() {
       setOpenNextModal(false); // Reset flag
       setMenuModalVisible(true); // Open menu modal
     }
+
   }}
 >
 
@@ -287,17 +368,30 @@ export default function GardenScreen() {
   </View>
 </Modal>
 
-      {/* Separate Menu Modal */}
-      <Modal
-          isVisible={menuModalVisible}
-          onBackdropPress={() => setMenuModalVisible(false)}
-          swipeDirection="down" // Enable swipe-to-close
-          onSwipeComplete={() => setMenuModalVisible(false)} // Close on swipe
-          style={styles.modalStyle} // Use the same modalStyle for positioning
-        >
+      {/*
+      Separate Menu Modal for Rename Plant, Change Photo, Water Plant, Set Watering Schedule, and Delete Plant
+      */}
+          <Modal
+            isVisible={menuModalVisible}
+            onBackdropPress={() => setMenuModalVisible(false)}
+            swipeDirection="down"
+            onSwipeComplete={() => setMenuModalVisible(false)}
+            style={styles.modalStyle}
+            onModalHide={() => {
+              if (openWateringScheduleNext) {
+                setOpenWateringScheduleNext(false); // Reset flag
+                setWateringScheduleModalVisible(true); // Open watering schedule modal
+              }
+              if (openEditModalNext) {
+                setOpenEditModalNext(false); // Reset the flag
+                setEditModalVisible(true);   // Open the rename modal
+              }
+            }}
+          >
+
 
         <View style={styles.menuModalContainer}>
-          <TouchableOpacity onPress={() => { handleRenamePlant(); setMenuModalVisible(false); }} style={styles.menuItem}>
+          <TouchableOpacity onPress={openRenameModal} style={styles.menuItem}>
             <Text style={styles.menuItemText}>Rename Plant</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => { handleChangePhoto(); setMenuModalVisible(false); }} style={styles.menuItem}>
@@ -306,9 +400,11 @@ export default function GardenScreen() {
           <TouchableOpacity onPress={() => { handleWaterPlant(); setMenuModalVisible(false); }} style={styles.menuItem}>
             <Text style={styles.menuItemText}>Water Plant</Text>
           </TouchableOpacity>
+          
           <TouchableOpacity onPress={() => { handleWateringSchedule(); setMenuModalVisible(false); }} style={styles.menuItem}>
             <Text style={styles.menuItemText}>Set Watering Schedule</Text>
           </TouchableOpacity>
+
           <TouchableOpacity onPress={() => { handleDeleteImage(); setMenuModalVisible(false); }} style={styles.menuItem}>
             <Text style={styles.menuItemText}>Delete Plant</Text>
           </TouchableOpacity>
@@ -318,9 +414,58 @@ export default function GardenScreen() {
         </View>
       </Modal>
 
+      {/* Watering Schedule Modal */}
+      <Modal
+        isVisible={wateringScheduleModalVisible}
+        onBackdropPress={() => setWateringScheduleModalVisible(false)}
+        swipeDirection="down"
+        onSwipeComplete={() => setWateringScheduleModalVisible(false)}
+        style={styles.modalStyle}
+      >
+        <View style={styles.modalContent}>
+          <Text style={styles.heading}>Set Watering Schedule</Text>
+          <Text style={styles.modalText}>This is where you'll configure your watering schedule.</Text>
+          <TouchableOpacity onPress={() => setWateringScheduleModalVisible(false)} style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* End of Watering Schedule Modal */}
+
+      {/* Edit Plant Modal */}
+      <Modal
+        isVisible={editModalVisible}
+        onBackdropPress={() => setEditModalVisible(false)}
+        swipeDirection="down"
+        onSwipeComplete={() => setEditModalVisible(false)}
+        style={styles.modalStyle}
+      >
+        <View style={styles.renameModalContainer}>
+          <View style={styles.renameModalContent}>
+            <Text style={styles.renameModalTitle}>Rename Plant</Text>
+            <TextInput
+              placeholder="Enter new plant name"
+              value={newPlantName}
+              onChangeText={setNewPlantName}
+              style={styles.textInput}
+            />
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity onPress={handleRenamePlant} style={styles.button}>
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.button}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {/* End of Edit Plant Modal */}
+
 {/* 
 End of Garden Screen 
-everything should be contained within the View and Paper Provider*/}
+everything should be contained within this View and Paper Provider*/}
     </View>
     </PaperProvider>
 
