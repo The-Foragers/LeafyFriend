@@ -1,11 +1,5 @@
-// plantApi.js
 import fetch from 'node-fetch';
 import axios from 'axios';
-
-type Message = {
-  role: string;
-  content: string;
-};
 
 export type PlantInfo = {
   description: string;
@@ -18,9 +12,11 @@ export type PlantInfo = {
   additionalCareTips: string;
 };
 
+const MAX_RETRIES = 3; // Maximum number of retries
+
 export async function fetchPlantInfo(plantSpecies: string): Promise<PlantInfo | null> {
   const url = 'https://api.hyperbolic.xyz/v1/chat/completions';
-  const apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2VsLmVmcmVuQGdtYWlsLmNvbSIsImlhdCI6MTczMDMyNzM3OH0.AVufIZJUcziSHJ36yTbcX1lwd5_7xVPXvYVy5rzs6Nk'; // Consider storing this securely or in an environment variable
+  const apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2VsLmVmcmVuQGdtYWlsLmNvbSIsImlhdCI6MTczMDMyNzM3OH0.AVufIZJUcziSHJ36yTbcX1lwd5_7xVPXvYVy5rzs6Nk';
 
   const prompt = `You are an expert botanist and plant care advisor. Provide a detailed care and information guide for the plant species: **${plantSpecies}**.
 
@@ -34,43 +30,63 @@ Please return the response as a JSON object with the following keys:
 7. "family": The family this plant belongs to.
 8. "additionalCareTips": Any extra tips for maintaining the plant's health, such as soil type, humidity, temperature, or common issues.
 
-Return only the JSON object and no additional text.`;
+Return only the JSON object and no additional text`;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'meta-llama/Llama-3.2-3B-Instruct',
-      messages: [{ role: 'user', content: prompt } ],
-      max_tokens: 512,
-      temperature: 0.7,
-      top_p: 0.9,
-      stream: false,
-    }),
-  });
+  let attempt = 0;
+  let success = false;
 
-  if (!response.ok) {
-    console.error('Error fetching data:', response.status, response.statusText);
-    throw new Error(`HTTP error! status: ${response.status}`);
+  while (attempt < MAX_RETRIES && !success) {
+    try {
+      attempt++;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/Llama-3.2-3B-Instruct',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 512,
+          temperature: 0.7,
+          top_p: 0.9,
+          stream: false,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Error fetching data:', response.status, response.statusText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const json = await response.json();
+      let output = json.choices[0]?.message?.content;
+
+      // Log the raw response for debugging
+      console.log('Raw LLM response:', output);
+
+      // Attempt to remove any leading or trailing non-JSON characters
+      output = output.trim();
+      if (output.startsWith('```json')) {
+        output = output.slice(7);
+      }
+      if (output.endsWith('```')) {
+        output = output.slice(0, -3);
+      }
+
+      // Try parsing the cleaned output as JSON
+      const plantInfo: PlantInfo = JSON.parse(output);
+      success = true; // Mark as successful
+      return plantInfo;
+    } catch (error) {
+      if (attempt >= MAX_RETRIES) {
+        // Maximum retries reached, log the error quietly
+        console.error(`Error parsing JSON response on attempt ${attempt}:`, error);
+        console.error('Output was:', output);
+        return null; // Return null if all retries fail
+      }
+    }
   }
 
-  const json = await response.json();
-  let output = json.choices[0]?.message?.content;  // Changed 'const' to 'let'
-  output = output.replace(/```+json|```+/g, '');
-  //output = output.replace(/json|/g, ''); this is the old line
-  // Log the output to understand what was received
-  console.log('Raw LLM response:', output);
-//
-  try {
-    // Try parsing the output as JSON
-    const plantInfo: PlantInfo = JSON.parse(output);
-    return plantInfo;
-  } catch (error) {
-    console.error('Error parsing JSON response:', error);
-    console.error('Output was:', output); // Log the actual response for debugging
-    return null; // Return null if parsing fails
-  }
+  return null;
 }
