@@ -1,5 +1,4 @@
 import React, { useCallback, useState, useRef } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, NativeSyntheticEvent, NativeScrollEvent, Dimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { getImages, deleteImage, updatePlantName as updatePlantNameInDB, updatePlantImage } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
@@ -8,6 +7,10 @@ import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
 import Modal from 'react-native-modal';
 import Icon from 'react-native-ionicons';
 import * as ImagePicker from 'expo-image-picker';
+import { 
+  View, Text, TextInput, StyleSheet, Image, ScrollView, ActionSheetIOS,Platform,
+  TouchableOpacity, Alert, NativeSyntheticEvent, NativeScrollEvent, Dimensions 
+} from 'react-native';
 
 
 export default function GardenScreen() {
@@ -190,34 +193,129 @@ const openRenameModal = () => {
       }
     };
     
+    /* 
+    From here we are handling the photo change
+     */
     
-    
+    // Handle opening camera or gallery specific to platform
+    const handleAddPhotoPress = () => {
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options: ['Cancel', 'Take a Photo', 'Open Gallery'],
+            cancelButtonIndex: 0,
+          },
+          (buttonIndex) => {
+            if (buttonIndex === 1) {
+              openCamera();
+            } else if (buttonIndex === 2) {
+              openGallery();
+            }
+          }
+        );
+      } else {
+        // Android and other platforms
+        Alert.alert(
+          'Choose an option',
+          '',
+          [
+            { text: 'Take a Photo', onPress: openCamera },
+            { text: 'Open Gallery', onPress: openGallery },
+            { text: 'Cancel', style: 'cancel' },
+          ],
+          { cancelable: true }
+        );
+      }
+    };
 
-    
-    const handleChangePhoto = async () => {
+    // Open Camera
+    const openCamera = async () => {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Camera access is needed to take photos.');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [3, 4],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        confirmReplacePhoto(uri);
+      }
+    };
+
+    // Open Gallery
+    const openGallery = async () => {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Gallery access is needed to select photos.');
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
+        aspect: [3, 4],
         quality: 1,
       });
-    
+
       if (!result.canceled) {
         const uri = result.assets[0].uri;
-        setNewImageUri(uri);
-        if (selectedImage) {
-          await updatePlantImage(selectedImage.id, uri); // Use updatePlantImage
+        confirmReplacePhoto(uri);
+      }
+    };
+    const confirmReplacePhoto = (newUri) => {
+      Alert.alert(
+        'Replace Picture?',
+        'Are you sure you want to replace the current picture?',
+        [
+          { text: 'Yes', onPress: () => handleReplacePhoto(newUri) },
+          { text: 'No', style: 'cancel' },
+        ],
+        { cancelable: true }
+      );
+    };
+    const handleReplacePhoto = async (newUri) => {
+      if (selectedImage) {
+        // Update image in the database
+        const success = await updatePlantImage(selectedImage.id, newUri);
+        if (success) {
+          // Update image in the state
           setImages((prev) =>
             prev.map((plant) =>
-              plant.id === selectedImage.id ? { ...plant, uri } : plant
+              plant.id === selectedImage.id ? { ...plant, uri: newUri } : plant
             )
           );
+          // Update the selected image
+          setSelectedImage((prev) => ({ ...prev, uri: newUri }));
+          Alert.alert('Success', 'Plant image updated successfully.');
+        } else {
+          Alert.alert('Error', 'Failed to update plant image. Please try again.');
         }
-        setMenuModalVisible(false); // Close the menu modal
-        setOpenEditModalNext(true); // Open the edit modal next
+      } else {
+        Alert.alert('Error', 'No plant selected.');
       }
     };
     
-  
+
+    const handleChangePhoto = () => {
+      setMenuModalVisible(false); // Close the menu modal
+      setTimeout(() => {
+        handleAddPhotoPress(); // Start the photo selection process after a short delay
+      }, 500); // Delay in milliseconds (adjust as needed)
+    };
+    
+
+    
+    
+      /* 
+    End of handling the photo change
+     */
 
 
   /* 
@@ -237,10 +335,10 @@ const openRenameModal = () => {
   
 
   return (
-    <PaperProvider>
 
     <View style={styles.container}>
       <TopBar title="My Garden" showSettings={true} onSettingsPress={handleSettingsPress} />
+      <PaperProvider>
 
       {/* Sort Dropdown Menu */}
       <View style={styles.menuContainer}>
@@ -394,7 +492,7 @@ const openRenameModal = () => {
           <TouchableOpacity onPress={openRenameModal} style={styles.menuItem}>
             <Text style={styles.menuItemText}>Rename Plant</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { handleChangePhoto(); setMenuModalVisible(false); }} style={styles.menuItem}>
+          <TouchableOpacity onPress={handleChangePhoto} style={styles.menuItem}>
             <Text style={styles.menuItemText}>Change Photo</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => { handleWaterPlant(); setMenuModalVisible(false); }} style={styles.menuItem}>
@@ -466,8 +564,9 @@ const openRenameModal = () => {
 {/* 
 End of Garden Screen 
 everything should be contained within this View and Paper Provider*/}
-    </View>
     </PaperProvider>
+
+    </View>
 
   );
 }
