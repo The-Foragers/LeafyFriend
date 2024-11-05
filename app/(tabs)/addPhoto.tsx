@@ -176,7 +176,7 @@ export default function AddPhotoScreen() {
               const watering = speciesData?.watering || 'Unknown';
               const poisonousToHumans = speciesData?.poisonousToHumans || 'Unknown'; // Assuming false is the default
               const poisonousToPets = speciesData?.poisonousToPets || 'Unknown'; // Assuming false is the default
-              const scientificName = speciesData?.scientific_name || 'Unknown';
+              const scientificName = speciesData?.scientificName || 'Unknown';
               const family = speciesData?.family || 'Unknown';
               const sunlight = speciesData?.sunlight || 'Unknown';
               const additionalCareTips=speciesData?.additionalCareTips|| 'Unknown'; //added additionalCareTips for extra info
