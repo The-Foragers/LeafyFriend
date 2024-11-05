@@ -469,7 +469,7 @@ const openRenameModal = () => {
       {/*
       Separate Menu Modal for Rename Plant, Change Photo, Water Plant, Set Watering Schedule, and Delete Plant
       */}
-          <Modal
+        <Modal
             isVisible={menuModalVisible}
             onBackdropPress={() => setMenuModalVisible(false)}
             swipeDirection="down"
@@ -485,10 +485,17 @@ const openRenameModal = () => {
                 setEditModalVisible(true);   // Open the rename modal
               }
             }}
-          >
+        >
+          <View style={styles.menuModalContainer}>
+            {/* Display Plant Image and Name */}
+            {selectedImage && (
+              <View style={styles.selectedPlantContainer}>
+                <Image source={{ uri: selectedImage.uri }} style={styles.selectedPlantImage} />
+                <Text style={styles.selectedPlantName}>{selectedImage.name}</Text>
+              </View>
+            )}
 
-
-        <View style={styles.menuModalContainer}>
+          {/* Menu Items */}          
           <TouchableOpacity onPress={openRenameModal} style={styles.menuItem}>
             <Text style={styles.menuItemText}>Rename Plant</Text>
           </TouchableOpacity>
@@ -511,6 +518,7 @@ const openRenameModal = () => {
           </TouchableOpacity>
         </View>
       </Modal>
+
 
       {/* Watering Schedule Modal */}
       <Modal

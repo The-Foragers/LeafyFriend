@@ -62,6 +62,25 @@ export const makeStyles = (theme: MD3Theme) =>
 /* End of Styles for the Garden Screen */
 
 /* Menu modal to change name, photo etc*/
+selectedPlantContainer: {
+  alignItems: 'center',
+  marginBottom: 16,
+},
+selectedPlantImage: {
+  width: '100%',
+  height: height * 0.4, // Adjust the height based on screen height
+  resizeMode: 'contain',
+  borderRadius: 10,
+  marginBottom: 0,
+},
+selectedPlantName: {
+  fontSize: 20,
+  fontWeight: 'bold',
+  marginBottom: 5,
+  color: theme.colors.primary,
+},
+
+
 menuModalContainer: {
   flex: 1,
   justifyContent: 'flex-end', // Align it to the bottom
