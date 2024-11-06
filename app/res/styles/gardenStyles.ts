@@ -84,10 +84,10 @@ selectedPlantName: {
 menuModalContainer: {
   flex: 1,
   justifyContent: 'flex-end', // Align it to the bottom
-  backgroundColor: theme.colors.background, // Similar background overlay
+  backgroundColor: theme.colors.secondaryContainer, // Similar background overlay
 },
 menuModalContent: {
-  backgroundColor: theme.colors.background, // Use main modal's background color
+  backgroundColor: theme.colors.secondaryContainer, // Use main modal's background color
   borderTopLeftRadius: 20,
   borderTopRightRadius: 20,
   padding: 20,
@@ -97,16 +97,40 @@ menuModalContent: {
 },
 menuItem: {
   paddingVertical: 10,
+  backgroundColor: theme.colors.secondaryContainer, // Use surface color
   alignItems: 'center',
   width: '100%',
   borderBottomWidth: 1,
-  borderBottomColor: theme.colors.surfaceVariant, // Divider line
+  borderBottomColor: theme.colors.outline, // Divider line
 },
 menuItemText: {
   fontSize: 16,
   color: theme.colors.onSurface,
   textAlign: 'center',
   paddingVertical: 8,
+},
+settmodalButtonContainer: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginTop: 10,
+},
+modalButton: {
+  backgroundColor: theme.colors.primaryContainer, // Customize this color
+  paddingVertical: 10,
+  paddingHorizontal: 15,
+  borderRadius: 10,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 4,
+  elevation: 3,
+  marginHorizontal: 10, // Add margin to separate buttons
+},
+modalButtonText: {
+  color: theme.colors.onPrimaryContainer,
+  fontSize: 16,
+  fontWeight: 'bold',
+  textAlign: 'center',
 },
 
 /*end of Menu modal for individual plants */
@@ -205,7 +229,7 @@ button: {
       deleteButton: {
         flex: 1,
         padding: 15,
-        backgroundColor: '#ff4d4d',
+        backgroundColor: '#2089ac',
         borderRadius: 5,
         marginLeft: 5,
       },

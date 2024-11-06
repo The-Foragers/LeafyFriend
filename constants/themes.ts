@@ -107,7 +107,7 @@ export const CustomPaperLightTheme: MD3Theme = {
     onSurface: SelectedPalette['900'],
     error: '#B00020',
     onError: '#FFFFFF',
-    outline: SelectedPalette['400'],
+    outline: SelectedPalette['300'],
     surfaceVariant: SelectedPalette['200'],
     onSurfaceVariant: SelectedPalette['800'],
     inverseSurface: SelectedPalette['900'],

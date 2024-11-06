@@ -60,6 +60,7 @@ export default function GardenScreen() {
     additionalCareTips?: string;//new
   } | null>(null);
   
+//when you click a plant image
 
   const handleImageClick = (image: { 
     id: number, // Include id
@@ -75,7 +76,7 @@ export default function GardenScreen() {
     sunlight?: string,
     additionalCareTips?: string,
   }) => {
-    console.log("Selected Image ID:", image.id); // Now image.id is defined
+    //console.log("Selected Image ID:", image.id); // for debugging, show the selected plant id
     setSelectedImage(image);
     setModalVisible(true);
 
@@ -104,7 +105,7 @@ export default function GardenScreen() {
             text: 'Delete',
             style: 'destructive',
             onPress: () => {
-              deleteImage(selectedImage.id); // Use id
+              deleteImage(selectedImage.id); // Use id of selected plant
               setImages(images.filter(image => image.id !== selectedImage.id)); // Filtering by id
               setModalVisible(false);
             },
@@ -116,7 +117,7 @@ export default function GardenScreen() {
   };
   
 
-    //
+    // these two are for the scrollview in the plant modal, it allows the user to scroll through the plant information
     const handleOnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       setScrollOffset(event.nativeEvent.contentOffset.y);
     };
@@ -146,13 +147,14 @@ export default function GardenScreen() {
   
   /*
    * Watering Schedule Modal
+  These two are for the modals to be opened after the main modal is closed
+  Necessary to avoid two modals being open at the same time, which causes a bug
    */
   const handleWateringSchedule = () => {
     setOpenWateringScheduleNext(true); // Set flag to open watering schedule modal
     setMenuModalVisible(false); // Close the menu modal
   };
   
-
 // Function to open the rename modal
 const openRenameModal = () => {
   setOpenEditModalNext(true); // Set the flag to open the rename modal
@@ -456,8 +458,8 @@ const openRenameModal = () => {
 
         <View style={styles.modalButtonContainer}>
 
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteImage}>
-            <Text style={styles.deleteButtonText}>Delete</Text>
+          <TouchableOpacity style={styles.deleteButton} onPress={handleWaterPlant}>
+            <Text style={styles.deleteButtonText}>Water Plant</Text>
           </TouchableOpacity>
 
         </View>
@@ -537,6 +539,8 @@ const openRenameModal = () => {
         </View>
       </Modal>
 
+
+
       {/* End of Watering Schedule Modal */}
 
       {/* Edit Plant Modal */}
@@ -556,12 +560,12 @@ const openRenameModal = () => {
               onChangeText={setNewPlantName}
               style={styles.textInput}
             />
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity onPress={handleRenamePlant} style={styles.button}>
-                <Text style={styles.buttonText}>Save</Text>
+            <View style={styles.settmodalButtonContainer}>
+              <TouchableOpacity onPress={handleRenamePlant} style={styles.modalButton}>
+                <Text style={styles.modalButtonText}>Save</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.button}>
-                <Text style={styles.buttonText}>Cancel</Text>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.modalButton}>
+                <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
