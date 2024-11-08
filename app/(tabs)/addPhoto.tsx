@@ -180,6 +180,8 @@ export default function AddPhotoScreen() {
               const family = speciesData?.family || 'Unknown';
               const sunlight = speciesData?.sunlight || 'Unknown';
               const additionalCareTips=speciesData?.additionalCareTips|| 'Unknown'; //added additionalCareTips for extra info
+              // Extract watering_schedule if available
+              const watering_schedule = speciesData?.watering_schedule || undefined;
         // Insert the image URI into the database
       /*----------------------Joel-----------------------------*/
       console.log('Species Info:', {
@@ -191,6 +193,8 @@ export default function AddPhotoScreen() {
              family,
              sunlight,
              additionalCareTips,
+             watering_schedule,
+
            });
        /*----------------------Joel-----------------------------*/
         await insertImage(
@@ -205,6 +209,8 @@ export default function AddPhotoScreen() {
           family,
           sunlight,
           additionalCareTips,
+          watering_schedule // Pass the watering_schedule parameter
+
         );
         console.log('Image inserted successfully');
         setLoadingMessage('Saving to garden...');

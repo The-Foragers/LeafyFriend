@@ -5,8 +5,6 @@ const dbPromise = SQLite.openDatabaseAsync('garden.db');
 // Initialize the database
 export const createTable = async () => {
   const db = await dbPromise;
-  // Drop the old table if it exists
-  //await db.execAsync('DROP TABLE IF EXISTS images;');
 
   // Create the new table with the updated schema
   await db.execAsync(`
@@ -17,40 +15,52 @@ export const createTable = async () => {
       species TEXT,
       description TEXT,
       watering TEXT,
-      poisonousToHumans TEXT,   -- Updated to TEXT for string values
-      poisonousToPets TEXT,     -- Updated to TEXT for string values
+      poisonousToHumans TEXT,
+      poisonousToPets TEXT,
       scientificName TEXT,
       family TEXT,
       sunlight TEXT,
-      additionalCareTips TEXT   -- Added additionalCareTips field
+      additionalCareTips TEXT,
+      watering_schedule TEXT,   -- Added watering_schedule field as TEXT to store JSON
+      lastWatered TIMESTAMP     -- Added lastWatered field
+    );
+  `);
+
+  // Create the watering_schedules table
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS watering_schedules (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plant_id INTEGER,
+      spring_summer TEXT,
+      fall_winter TEXT,
+      FOREIGN KEY (plant_id) REFERENCES images(id) ON DELETE CASCADE
     );
   `);
 };
 
-// Insert an image into the database
-export const insertImage = async (
-  name: string,
-  uri: string,
-  species: string,
-  description: string,
-  watering: string,
-  poisonousToHumans: string,  // Updated type to string
-  poisonousToPets: string,    // Updated type to string
-  scientificName: string,
-  family: string,
-  sunlight: string,
-  additionalCareTips: string  // Added additionalCareTips parameter
-) => {
+// Function to drop all tables
+export const dropTables = async () => {
   const db = await dbPromise;
-  await db.runAsync(`INSERT INTO images (name, uri, species, description, watering, poisonousToHumans, poisonousToPets, scientificName, family, sunlight, additionalCareTips)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
-    [name, uri, species, description, watering, poisonousToHumans, poisonousToPets, scientificName, family, sunlight, additionalCareTips]
-  );
+
+  // Drop the images table
+  await db.execAsync('DROP TABLE IF EXISTS images;');
+
+  // Drop the watering_schedules table
+  await db.execAsync('DROP TABLE IF EXISTS watering_schedules;');
 };
 
-// Get all images from the database
-export const getImages = async (callback: (images: {
-  id: number, // Include id in the type definition
+/* 
+WARNING: This will delete all data in the database
+
+dropTables();
+
+*/
+
+
+// Insert an image into the database
+// Modify your insertImage function to include watering_schedule:
+
+export const insertImage = async (
   name: string,
   uri: string,
   species: string,
@@ -61,12 +71,61 @@ export const getImages = async (callback: (images: {
   scientificName: string,
   family: string,
   sunlight: string,
-  additionalCareTips: string
+  additionalCareTips: string,
+  watering_schedule?: { spring_summer?: string; fall_winter?: string } // Added watering_schedule parameter
+  
+) => {
+  const db = await dbPromise;
+
+  // Convert watering_schedule to JSON string if it exists
+  const wateringScheduleJSON = watering_schedule ? JSON.stringify(watering_schedule) : null;
+
+  await db.runAsync(
+    `INSERT INTO images (name, uri, species, description, watering, poisonousToHumans, poisonousToPets, scientificName, family, sunlight, additionalCareTips, watering_schedule)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    [
+      name,
+      uri,
+      species,
+      description,
+      watering,
+      poisonousToHumans,
+      poisonousToPets,
+      scientificName,
+      family,
+      sunlight,
+      additionalCareTips,
+      wateringScheduleJSON,
+      null, // Set lastWatered to null initially
+    ]
+  );
+};
+
+
+// Get all images from the database
+// Modify your getImages function as follows:
+
+export const getImages = async (callback: (images: {
+  id: number,
+  name: string,
+  uri: string,
+  species: string,
+  description: string,
+  watering: string,
+  poisonousToHumans: string,
+  poisonousToPets: string,
+  scientificName: string,
+  family: string,
+  sunlight: string,
+  additionalCareTips: string,
+  watering_schedule?: { spring_summer?: string; fall_winter?: string }, // Include watering_schedule in the type definition
+  lastWatered: string | null // Corrected type definition
+
 }[]) => void) => {
   const db = await dbPromise;
   const rows = await db.getAllAsync('SELECT * FROM images;');
   const images = rows.map(row => ({
-    id: row.id, // Include id in the mapped data
+    id: row.id,
     name: row.name,
     uri: row.uri,
     species: row.species,
@@ -77,10 +136,30 @@ export const getImages = async (callback: (images: {
     scientificName: row.scientificName,
     family: row.family,
     sunlight: row.sunlight,
-    additionalCareTips: row.additionalCareTips
+    additionalCareTips: row.additionalCareTips,
+    watering_schedule: row.watering_schedule ? JSON.parse(row.watering_schedule) : undefined, // Parse watering_schedule from JSON
+    lastWatered: row.lastWatered || null,
+
   }));
   callback(images);
 };
+/**
+ * Update the lastWatered field for a plant in the database
+ * @param id 
+ * @param lastWateredDate 
+ */
+export const updateLastWatered = async (id: number, lastWateredDate: string) => {
+  const db = await dbPromise;
+  try {
+    await db.runAsync('UPDATE images SET lastWatered = ? WHERE id = ?;', [lastWateredDate, id]);
+    console.log(`Updated lastWatered for plant ID ${id}`);
+    return true;
+  } catch (error) {
+    console.error("Failed to update lastWatered:", error);
+    return false;
+  }
+};
+
 
 // Update a plant's name in the database
 export const updatePlantName = async (id: number, newName: string) => {
