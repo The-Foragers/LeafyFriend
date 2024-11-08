@@ -18,6 +18,8 @@ export const makeStyles = (theme: MD3Theme) =>
         paddingTop: 20,
         padding: 10,
         alignItems: 'stretch',
+        paddingVertical: 20,
+        paddingHorizontal: 10,
 
     },
     heading: {
@@ -190,8 +192,9 @@ button: {
         padding: 20,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        maxHeight: '80%',
+        maxHeight: '95%',
       },
+
       scrollViewContent: {
         alignItems: 'center',
       },
@@ -260,7 +263,12 @@ button: {
         color: '#333',
         fontWeight: 'bold',
       },
-      
+      //divider in watering
+      divider: {
+        height: 1,
+        backgroundColor: theme.colors.onSurface,
+        marginVertical: 10,
+      },
 
       topCloseButtonText: {
         fontSize: 30,
@@ -294,7 +302,59 @@ button: {
         marginVertical: 2,
         textAlign: 'left',
       },
+      modalsubText: {
+        fontSize: 20, // Adjusted for readability
+        color: theme.colors.onSurface,
+        marginVertical: 2,
+        textAlign: 'left',
+      },
       
 /* End of Modal for individual plant information*/
+
+/**
+ * Watering modal styles
+ */
+
+wateringModalContent: {
+  backgroundColor: theme.colors.background,
+  padding: 20,
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+  maxHeight: '100%',
+},
+row: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginVertical: 5,
+},
+
+input: {
+  flex: 1,
+  height: 40,
+  borderColor: theme.colors.outline,
+  borderWidth: 1,
+  borderRadius: 5,
+  paddingHorizontal: 10,
+  marginHorizontal: 5,
+  backgroundColor: theme.colors.background,
+},
+
+picker: {
+  flex: 1,
+  height: 40,
+},
+
+modalFooter: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  padding: 10,
+},
+wateringCancelButton: {
+  padding: 10,
+},
+wateringSaveButton: {
+  padding: 10,
+},
 
   });
