@@ -1,9 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTheme, MD3Theme } from 'react-native-paper';
 
 
@@ -63,13 +60,13 @@ return (
           ),
         }}
       />
-      {/* Badges Tab */}
+      {/* Chatbot Tab */}
       <Tabs.Screen
-        name="badges"
+        name="chatbot"
         options={{
-          title: 'Badges',
+          title: 'AI Chat',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'medal' : 'medal-outline'} color={color} />
+            <TabBarIcon name={focused ? 'person' : 'person-outline'} color={color} />
           ),
         }}
       />
