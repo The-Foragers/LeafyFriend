@@ -9,6 +9,8 @@ import { makeStyles } from '@/app/res/styles/addPhotoStyles'; // Import the styl
 import axios from 'axios';
 import { fetchPlantInfoBySpecies } from '@/scripts/perenual';
 import { fetchPlantInfoByID } from '@/scripts/perenual2';
+import fetch from 'node-fetch';
+import { fetchPlantInfo, PlantInfo } from '@/scripts/hyperbolic';
 
 
 // Define the type for the route parameters
@@ -172,28 +174,39 @@ export default function AddPhotoScreen() {
       try {
               const description = speciesData?.description || 'Unknown';
               const watering = speciesData?.watering || 'Unknown';
-              const wateringValue = speciesData?.watering_general_benchmark?.value || 'Unknown';
-              const wateringUnit = speciesData?.watering_general_benchmark?.unit || 'Unknown';
-              const poisonousToHumans = speciesData?.poisonousToHumans || false; // Assuming false is the default
-              const poisonousToPets = speciesData?.poisonousToPets || false; // Assuming false is the default
+              const poisonousToHumans = speciesData?.poisonousToHumans || 'Unknown'; // Assuming false is the default
+              const poisonousToPets = speciesData?.poisonousToPets || 'Unknown'; // Assuming false is the default
               const scientificName = speciesData?.scientific_name || 'Unknown';
               const family = speciesData?.family || 'Unknown';
               const sunlight = speciesData?.sunlight || 'Unknown';
+              const additionalCareTips=speciesData?.additionalCareTips|| 'Unknown'; //added additionalCareTips for extra info
         // Insert the image URI into the database
+      /*----------------------Joel-----------------------------*/
+      console.log('Species Info:', {
+             description,
+             watering,
+             poisonousToHumans,
+             poisonousToPets,
+             scientificName,
+             family,
+             sunlight,
+             additionalCareTips,
+           });
+       /*----------------------Joel-----------------------------*/
         await insertImage(
           plantName,
           image,
           plantSpecies || 'Unknown',
           description,
           watering,
-          wateringValue,
-          wateringUnit,
           poisonousToHumans,
           poisonousToPets,
           scientificName,
           family,
-          sunlight
+          sunlight,
+          additionalCareTips,
         );
+        console.log('Image inserted successfully');
         setLoadingMessage('Saving to garden...');
 
         // Fetch the updated list of images
@@ -228,42 +241,33 @@ export default function AddPhotoScreen() {
     setSpeciesModalVisible(false);
   };
 
-  const handleShowSpeciesData = async () => {
-        //if (!showSpeciesData && !speciesData) {
-        if (plantSpecies && !showSpeciesData) {
+ const handleShowSpeciesData = async () => {
+     if (plantSpecies && !showSpeciesData) {
          console.log("Fetching species data for:", plantSpecies);
-          // If species data is not loaded and the user is requesting to show it, fetch the data
-          //setLoadingMessage('Getting info');
 
-          try {
-            // Make the API call here using the selected image species
-            const speciesInfo = await fetchPlantInfoBySpecies(plantSpecies);
+         try {
+             // Make the API call to get plant information using the LLM
+             const speciesInfo = await fetchPlantInfo(plantSpecies);
 
-            if (speciesInfo && speciesInfo.data && speciesInfo.data.length > 0) {
-              const speciesId = speciesInfo.data[0].id; // Get the species ID from the first API response
-              // Second API call to fetch detailed plant info by species ID
-              const detailedSpeciesInfo = await fetchPlantInfoByID(speciesId);
-              // Set the detailed species data to state
-              setSpeciesData(detailedSpeciesInfo);
-              setLoadingMessage(null);
-
-            } else {
-              setSpeciesData(null); // No species data found
-              //setLoadingMessage('No Species Data found');
-            }
-          } catch (error) {
-            console.error("Error fetching species data:", error);
-            Alert.alert('Error', 'Unable to fetch species data. Please try again.');
-            setSpeciesData(null);
-          } finally {
-            setLoadingSpecies(false);
-
-          }
-        }else {
-     setShowSpeciesData((prev) => !prev);
-     //setSpeciesModalVisible(true);
+             if (speciesInfo) {
+                 // Set the parsed species data to state directly
+                 setSpeciesData(speciesInfo);
+                 setLoadingMessage(null);
+             } else {
+                 setSpeciesData(null); // No species data found
+             }
+         } catch (error) {
+             console.error("Error fetching species data:", error);
+             Alert.alert('Error', 'Unable to fetch species data. Please try again.');
+             setSpeciesData(null);
+         } finally {
+             setLoadingSpecies(false);
+         }
+     } else {
+         // Toggle showing the species data
+         setShowSpeciesData((prev) => !prev);
      }
-   };
+ };
 
 
 
@@ -508,7 +512,7 @@ StyleSheet is in app/res/styles/addPhotoStyles */
         {`Watering: ${speciesData?.watering || 'Unknown'}`}
       </Text>
       <Text style={styles.modalText}>
-        {`Water every: ${speciesData?.watering_general_benchmark?.value || 'Unknown'} ${speciesData?.watering_general_benchmark?.unit || 'Unknown'}`}
+        {`Care Tips: ${speciesData?.additionalCareTips || 'Unknown'} `}
       </Text>
       <Text style={styles.modalText}>
         {`Sunlight: ${speciesData?.sunlight || 'Unknown'}`}
@@ -519,10 +523,10 @@ StyleSheet is in app/res/styles/addPhotoStyles */
     <View style={styles.infoContainer}>
       <Text style={styles.infoTitle}>Toxicity</Text>
       <Text style={styles.modalText}>
-        {`Poisonous to Humans: ${speciesData?.poisonousToHumans ? 'Yes' : 'No'}`}
+        {`Poisonous to Humans: ${speciesData?.poisonousToHumans|| 'unknown'}`}
       </Text>
       <Text style={styles.modalText}>
-        {`Poisonous to Pets: ${speciesData?.poisonousToPets ? 'Yes' : 'No'}`}
+        {`Poisonous to Pets: ${speciesData?.poisonousToPets|| 'unknown'}`}
       </Text>
     </View>
 
