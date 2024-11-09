@@ -703,105 +703,103 @@ export default function GardenScreen() {
 
       <Modal
   isVisible={wateringScheduleModalVisible}
-  animationIn="fadeIn"
-  animationOut="fadeOut"
+  swipeDirection="down"
+
   onBackdropPress={() => setWateringScheduleModalVisible(false)}
   style={styles.modalStyle}
 >
-  <View style={styles.wateringModalContent}>
+  <View style={styles.modalContent}>
     <View style={styles.modalHeader}>
       <Text style={styles.heading}>Set Custom Watering Schedule</Text>
     </View>
 
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      {/* Recommended Watering Schedule Section */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Recommended Watering Schedule</Text>
-      </View>
+      {/* Display Recommended Watering Schedule */}
       <View style={styles.infoContainer}>
-        <Text style={styles.infoTitle}>Summer: {plantWateringSchedule?.spring_summer || 'Not set'}</Text>
-        <Text style={styles.infoTitle}>Winter: {plantWateringSchedule?.fall_winter || 'Not set'}</Text>
+        <Text style={styles.infoTitle}>Recommended Watering</Text>
+        <Text style={styles.modalText}>
+          Summer: water every {plantWateringSchedule?.spring_summer || 'Not set'}
+        </Text>
+        <Text style={styles.modalText}>
+          Winter: water every {plantWateringSchedule?.fall_winter || 'Not set'}
+        </Text>
       </View>
 
-      {/* Custom Summer Schedule Section */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Custom Summer Schedule</Text>
-      </View>
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="Days From"
-          keyboardType="numeric"
-          value={customSummerFrom}
-          onChangeText={setCustomSummerFrom}
-        />
-        <Text style={styles.toText}>to</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Days To (optional)"
-          keyboardType="numeric"
-          value={customSummerTo}
-          onChangeText={setCustomSummerTo}
-        />
-      </View>
-      <View style={styles.unitSelector}>
-        <Text>Unit:</Text>
-        <Picker
-          selectedValue={summerUnit}
-          style={styles.picker}
-          onValueChange={(itemValue) => setSummerUnit(itemValue)}
-        >
-          <Picker.Item label="Days" value="day" />
-          <Picker.Item label="Weeks" value="week" />
-          <Picker.Item label="Months" value="month" />
-        </Picker>
-      </View>
-
-      {/* Custom Winter Schedule Section */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Custom Winter Schedule</Text>
-      </View>
-      <Switch
-        value={winterEnabled}
-        onValueChange={(value) => setWinterEnabled(value)}
-        style={styles.winterToggle}
-      />
-      {winterEnabled && (
-        <View style={styles.inputRow}>
+      {/* Custom Summer Schedule Input */}
+      <View style={styles.infoContainer}>
+        <Text style={styles.infoTitle}>Summer</Text>
+        <View style={styles.row}>
           <TextInput
             style={styles.input}
-            placeholder="Days From"
+            placeholder=""
             keyboardType="numeric"
-            value={customWinterFrom}
-            onChangeText={setCustomWinterFrom}
+            value={customSummerFrom}
+            onChangeText={setCustomSummerFrom}
           />
-          <Text style={styles.toText}>to</Text>
+          <Text>to</Text>
           <TextInput
             style={styles.input}
-            placeholder="Days To (optional)"
+            placeholder="(optional)"
             keyboardType="numeric"
-            value={customWinterTo}
-            onChangeText={setCustomWinterTo}
+            value={customSummerTo}
+            onChangeText={setCustomSummerTo}
           />
           <Picker
-            selectedValue={winterUnit}
+            selectedValue={summerUnit}
             style={styles.picker}
-            onValueChange={(itemValue) => setWinterUnit(itemValue)}
+            onValueChange={(itemValue) => setSummerUnit(itemValue)}
           >
-            <Picker.Item label="Days" value="day" />
-            <Picker.Item label="Weeks" value="week" />
-            <Picker.Item label="Months" value="month" />
+            <Picker.Item label="day(s)" value="day" />
+            <Picker.Item label="week(s)" value="week" />
+            <Picker.Item label="month(s)" value="month" />
           </Picker>
         </View>
-      )}
-    </ScrollView>
+      </View>
+
+      {/* Custom Winter Schedule Input with Switch */}
+      <View style={styles.infoContainer}>
+        <Text style={styles.infoTitle}>Winter</Text>
+        <Switch
+          value={winterEnabled}
+          onValueChange={(value) => setWinterEnabled(value)}
+        />
+        {winterEnabled && (
+          <View style={styles.row}>
+            <TextInput
+              style={styles.input}
+              placeholder="From"
+              keyboardType="numeric"
+              value={customWinterFrom}
+              onChangeText={setCustomWinterFrom}
+            />
+            <Text>to</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="To (optional)"
+              keyboardType="numeric"
+              value={customWinterTo}
+              onChangeText={setCustomWinterTo}
+            />
+            <Picker
+              selectedValue={winterUnit}
+              style={styles.picker}
+              onValueChange={(itemValue) => setWinterUnit(itemValue)}
+            >
+              <Picker.Item label="day(s)" value="day" />
+              <Picker.Item label="week(s)" value="week" />
+              <Picker.Item label="month(s)" value="month" />
+            </Picker>
+          </View>
+        )}
+      </View>
+
+      {/* End of scrollview */} 
 
     {/* Action Buttons */}
     <View style={styles.buttonContainer}>
-      <TouchableOpacity style={styles.cancelButton} onPress={() => setWateringScheduleModalVisible(false)}>
+      <TouchableOpacity style={styles.wateringCancelButton} onPress={() => setWateringScheduleModalVisible(false)}>
         <Text style={styles.buttonText}>Cancel</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+      <TouchableOpacity style={styles.wateringSaveButton} onPress={handleSaveWateringSchedule}>
         <Text style={styles.buttonText}>Save</Text>
       </TouchableOpacity>
     </View>
