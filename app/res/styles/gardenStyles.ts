@@ -1,5 +1,6 @@
 import { StyleSheet, Dimensions } from 'react-native';
 import { MD3Theme } from 'react-native-paper';
+import { Platform } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 export const makeStyles = (theme: MD3Theme) =>
@@ -263,6 +264,8 @@ button: {
         color: '#333',
         fontWeight: 'bold',
       },
+
+      /* Plant Modal */
       //divider in watering
       divider: {
         height: 1,
@@ -316,45 +319,101 @@ button: {
  */
 
 wateringModalContent: {
+  //flexDirection: 'row',
+  //flexWrap: 'wrap',
+  //justifyContent: 'space-between',
+  paddingTop: Platform.OS === 'ios' ? 40 : 0,
+  padding: 10,
+  //alignItems: 'stretch',
+  paddingVertical: 40,
+  paddingHorizontal: 10,
   backgroundColor: theme.colors.background,
-  padding: 20,
-  borderTopLeftRadius: 20,
-  borderTopRightRadius: 20,
+  //borderTopLeftRadius: 20,
+  //borderTopRightRadius: 20,
   maxHeight: '100%',
 },
 row: {
   flexDirection: 'row',
   alignItems: 'center',
-  justifyContent: 'space-between',
-  marginVertical: 5,
+  justifyContent: 'space-between', // Space items evenly
+  paddingHorizontal: 10, // Add some padding
+  gap: 10, // Space between items for better readability
 },
-
 input: {
-  flex: 1,
-  height: 40,
-  borderColor: theme.colors.outline,
+  //flex: 1, // Make the input fields take equal available space
+  height: 45, // Slightly increase height for a larger touch area
   borderWidth: 1,
-  borderRadius: 5,
-  paddingHorizontal: 10,
-  marginHorizontal: 5,
-  backgroundColor: theme.colors.background,
+  width: '20%',  
+  borderColor: '#ccc',
+  borderRadius: 10, // Rounded edges for a softer look
+  marginHorizontal: 0, // Add space between inputs
+  paddingHorizontal: 0,
+  textAlign: 'center', // Center text within the input
+  fontSize: 18, // Increase font size for readability
 },
-
 picker: {
   flex: 1,
-  height: 40,
+  height: 45, // Match picker height with input for uniformity
+  backgroundColor: theme.colors.surface, // Match input background color
+  color: '#333',
+  borderRadius: 50, // Rounded edges for consistency with inputs
+  marginHorizontal: 5,
+  justifyContent: 'center', // Center the content vertically
+  padding: Platform.OS === 'ios' ? 0 : 8, // Add padding on Android
 },
-
+winterFooter: {
+  flexDirection: 'row',
+  justifyContent: 'center', // Center the buttons
+  alignItems: 'center',
+  width: '100%',
+  padding: 10,
+  paddingBottom: 20, // Add space below footer for separation from content
+  backgroundColor: theme.colors.background,
+  //borderTopWidth: 1,
+  //borderColor: theme.colors.outline,
+  //marginTop: 10, // Add space above footer for separation from content
+},
 modalFooter: {
   flexDirection: 'row',
-  justifyContent: 'space-between',
+  justifyContent: 'center', // Center the buttons
+  alignItems: 'center',
+  width: '100%',
   padding: 10,
+  paddingBottom: 20, // Add space below footer for separation from content
+  backgroundColor: theme.colors.surface,
+  borderTopWidth: 1,
+  borderColor: theme.colors.outline,
+  //marginTop: 10, // Add space above footer for separation from content
 },
 wateringCancelButton: {
-  padding: 10,
+  paddingVertical: 12, // Increase padding for easier tapping
+  paddingHorizontal: 20,
+  backgroundColor: theme.colors.secondary, // Subtle background for cancel button
+  borderRadius: 10,
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginHorizontal: 10, // Add margin to separate buttons
 },
 wateringSaveButton: {
-  padding: 10,
+  paddingVertical: 12,
+  paddingHorizontal: 20,
+  backgroundColor: theme.colors.primary, // Distinct background for save button
+  borderRadius: 10,
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginHorizontal: 10, // Add margin to separate buttons
+},
+buttonText: {
+  color: theme.colors.onPrimary,
+  fontSize: 16,
+},
+
+winterRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  width: '100%',
+  paddingBottom: 10,
 },
 
   });

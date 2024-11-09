@@ -703,107 +703,147 @@ export default function GardenScreen() {
 
       <Modal
   isVisible={wateringScheduleModalVisible}
-  swipeDirection="down"
-
+  //swipeDirection="down"
+  animationIn={'fadeIn'}
+animationOut={'fadeOut'}
+  //onSwipeComplete={() => setWateringScheduleModalVisible(false)}
   onBackdropPress={() => setWateringScheduleModalVisible(false)}
   style={styles.modalStyle}
 >
-  <View style={styles.modalContent}>
+  <ScrollView style={styles.wateringModalContent}>
     <View style={styles.modalHeader}>
       <Text style={styles.heading}>Set Custom Watering Schedule</Text>
     </View>
+    
 
-      {/* Display Recommended Watering Schedule */}
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoTitle}>Recommended Watering</Text>
-        <Text style={styles.modalText}>
-          Summer: water every {plantWateringSchedule?.spring_summer || 'Not set'}
-        </Text>
-        <Text style={styles.modalText}>
-          Winter: water every {plantWateringSchedule?.fall_winter || 'Not set'}
-        </Text>
+    {/* Display Recommended Watering Schedule */}
+    <View style={styles.infoContainer}>
+      <Text style={styles.infoTitle}>Recommended Watering</Text>
+      <Text style={styles.modalText}>
+        Summer: water every {plantWateringSchedule?.spring_summer || 'Not set'}
+      </Text>
+      <Text style={styles.modalText}>
+        Winter: water every {plantWateringSchedule?.fall_winter || 'Not set'}
+      </Text>
+    </View>
+
+    {/* Current Watering Schedule */}
+    <View style={styles.infoContainer}>
+      <Text style={styles.infoTitle}>Current Watering Schedule</Text>
+
+      <Text style={styles.modalText}>
+        Summer: water every {plantWateringSchedule?.spring_summer || 'Not set'}
+      </Text>
+      <Text style={styles.modalText}>
+        Winter: water every {plantWateringSchedule?.fall_winter || 'Not set'}
+      </Text>
+      <View style={styles.divider} />
+
+      <Text style={styles.modalsubText}>Last watered on:</Text>
+      <Text style={styles.modalText}>
+        {lastWatered ? new Date(lastWatered).toDateString() : 'Not recorded'}
+      </Text>
+      <Text style={styles.modalsubText}>Next watering due on:</Text>
+      <Text style={styles.modalText}>
+        {nextWateringDate ? new Date(nextWateringDate).toDateString() : 'Cannot calculate'}
+      </Text>
+    </View>
+
+    {/* Custom Summer Schedule Input */}
+    <View style={styles.infoContainer}>
+      <Text style={styles.infoTitle}>Summer</Text>
+      <Text style={styles.modalsubText}>Water every</Text>
+
+      <View style={styles.row}>
+        <TextInput
+          style={styles.input}
+          placeholder=""
+          keyboardType="numeric"
+          value={customSummerFrom}
+          onChangeText={setCustomSummerFrom}
+        />
+        <Text>to</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="optional"
+          keyboardType="numeric"
+          value={customSummerTo}
+          onChangeText={setCustomSummerTo}
+        />
+        <Picker
+          selectedValue={summerUnit}
+          style={styles.picker}
+          onValueChange={(itemValue) => setSummerUnit(itemValue)}
+        >
+          <Picker.Item label="day(s)" value="day" />
+          <Picker.Item label="week(s)" value="week" />
+          <Picker.Item label="month(s)" value="month" />
+        </Picker>
       </View>
+    </View>
 
-      {/* Custom Summer Schedule Input */}
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoTitle}>Summer</Text>
+    {/* Custom Winter Schedule Input with Switch */}
+    <View style={styles.infoContainer}>
+      <View style={styles.winterRow}>
+        <Text style={styles.infoTitle}>Winter</Text>
+        <Switch
+          value={winterEnabled}
+          onValueChange={(value) => setWinterEnabled(value)}
+        />
+      </View>
+      {winterEnabled && (
         <View style={styles.row}>
-          <TextInput
+      <TextInput
             style={styles.input}
             placeholder=""
             keyboardType="numeric"
-            value={customSummerFrom}
-            onChangeText={setCustomSummerFrom}
+            value={customWinterFrom}
+            onChangeText={setCustomWinterFrom}
           />
           <Text>to</Text>
           <TextInput
             style={styles.input}
-            placeholder="(optional)"
+            placeholder="optional"
             keyboardType="numeric"
-            value={customSummerTo}
-            onChangeText={setCustomSummerTo}
+            value={customWinterTo}
+            onChangeText={setCustomWinterTo}
           />
+
           <Picker
-            selectedValue={summerUnit}
+            selectedValue={winterUnit}
             style={styles.picker}
-            onValueChange={(itemValue) => setSummerUnit(itemValue)}
+            onValueChange={(itemValue) => setWinterUnit(itemValue)}
           >
             <Picker.Item label="day(s)" value="day" />
             <Picker.Item label="week(s)" value="week" />
             <Picker.Item label="month(s)" value="month" />
           </Picker>
         </View>
-      </View>
+      )}
+    </View>
 
-      {/* Custom Winter Schedule Input with Switch */}
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoTitle}>Winter</Text>
-        <Switch
-          value={winterEnabled}
-          onValueChange={(value) => setWinterEnabled(value)}
-        />
-        {winterEnabled && (
-          <View style={styles.row}>
-            <TextInput
-              style={styles.input}
-              placeholder="From"
-              keyboardType="numeric"
-              value={customWinterFrom}
-              onChangeText={setCustomWinterFrom}
-            />
-            <Text>to</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="To (optional)"
-              keyboardType="numeric"
-              value={customWinterTo}
-              onChangeText={setCustomWinterTo}
-            />
-            <Picker
-              selectedValue={winterUnit}
-              style={styles.picker}
-              onValueChange={(itemValue) => setWinterUnit(itemValue)}
-            >
-              <Picker.Item label="day(s)" value="day" />
-              <Picker.Item label="week(s)" value="week" />
-              <Picker.Item label="month(s)" value="month" />
-            </Picker>
-          </View>
-        )}
-      </View>
+    <View style={styles.winterFooter}>
 
-      {/* End of scrollview */} 
 
-    {/* Action Buttons */}
-    <View style={styles.buttonContainer}>
+
+  </View>
+
+
+  </ScrollView>
+      {/* Action Buttons */}
+
+
+      <View style={styles.modalFooter}>
+
       <TouchableOpacity style={styles.wateringCancelButton} onPress={() => setWateringScheduleModalVisible(false)}>
         <Text style={styles.buttonText}>Cancel</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.wateringSaveButton} onPress={handleSaveWateringSchedule}>
         <Text style={styles.buttonText}>Save</Text>
       </TouchableOpacity>
-    </View>
-  </View>
+
+        </View>
+
 </Modal>
 
 
