@@ -6,10 +6,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { insertImage, getImages, createTable } from '@/app/utils/database';
 import { identifyPlant } from '@/scripts/Pl@ntNetAPI'; // Import the identifyPlant function
 import { makeStyles } from '@/app/res/styles/addPhotoStyles'; // Import the styles
-import axios from 'axios';
-import { fetchPlantInfoBySpecies } from '@/scripts/perenual';
-import { fetchPlantInfoByID } from '@/scripts/perenual2';
-import fetch from 'node-fetch';
 import { fetchPlantInfo, PlantInfo } from '@/scripts/hyperbolic';
 
 
@@ -22,7 +18,6 @@ type RootStackParamList = {
   };
 };
   garden: undefined;
-  badges: undefined;
 index: {
   images: { name: string; uri: string }[];
 };
@@ -176,7 +171,7 @@ export default function AddPhotoScreen() {
               const watering = speciesData?.watering || 'Unknown';
               const poisonousToHumans = speciesData?.poisonousToHumans || 'Unknown'; // Assuming false is the default
               const poisonousToPets = speciesData?.poisonousToPets || 'Unknown'; // Assuming false is the default
-              const scientificName = speciesData?.scientific_name || 'Unknown';
+              const scientificName = speciesData?.scientificName || 'Unknown';
               const family = speciesData?.family || 'Unknown';
               const sunlight = speciesData?.sunlight || 'Unknown';
               const additionalCareTips=speciesData?.additionalCareTips|| 'Unknown'; //added additionalCareTips for extra info
@@ -375,7 +370,7 @@ useEffect(() => {
     }
   };
 
-  const getImageForOrgan = (organ) => {
+  const getImageForOrgan = (organ: string) => {
     switch (organ) {
       case 'leaf':
         return require('../../assets/images/leaf.png'); // Adjusted path
