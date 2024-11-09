@@ -6,10 +6,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { insertImage, getImages, createTable } from '@/app/utils/database';
 import { identifyPlant } from '@/scripts/Pl@ntNetAPI'; // Import the identifyPlant function
 import { makeStyles } from '@/app/res/styles/addPhotoStyles'; // Import the styles
-import axios from 'axios';
-import { fetchPlantInfoBySpecies } from '@/scripts/perenual';
-import { fetchPlantInfoByID } from '@/scripts/perenual2';
-import fetch from 'node-fetch';
 import { fetchPlantInfo, PlantInfo } from '@/scripts/hyperbolic';
 
 
@@ -22,7 +18,6 @@ type RootStackParamList = {
   };
 };
   garden: undefined;
-  badges: undefined;
 index: {
   images: { name: string; uri: string }[];
 };
@@ -375,7 +370,7 @@ useEffect(() => {
     }
   };
 
-  const getImageForOrgan = (organ) => {
+  const getImageForOrgan = (organ: string) => {
     switch (organ) {
       case 'leaf':
         return require('../../assets/images/leaf.png'); // Adjusted path

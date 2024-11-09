@@ -177,12 +177,12 @@ export const makeStyles = (theme: MD3Theme) =>
         color: theme.colors.onSurface,
         marginBottom: 5,
       },
-      modalText: {
-        fontSize: 16, // Adjusted for readability
-        color: theme.colors.onSurface,
-        marginVertical: 2,
-        textAlign: 'left',
-      },
+      // modalText: { duplicate of container
+      //   fontSize: 16, // Adjusted for readability
+      //   color: theme.colors.onSurface,
+      //   marginVertical: 2,
+      //   textAlign: 'left',
+      // },
       
 
 
