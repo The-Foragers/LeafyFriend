@@ -52,6 +52,28 @@ export const makeStyles = (theme: MD3Theme) =>
       marginBottom: 5,
       color: theme.colors.primary,
     },
+
+    wateringInfo: {
+      fontSize: 14,
+      color: 'green', // or any color that fits your theme
+      marginTop: 4,
+    },
+    overdueWateringInfo: {
+      fontSize: 14,
+      color: 'red',
+      marginTop: 4,
+    },
+
+    menuContainer: {
+      alignItems: 'flex-end',
+      marginRight: 10,
+    },
+    wateringPeriod: {
+      fontSize: 12,
+      color: theme.colors.secondary,
+      marginTop: 4,
+    },
+
     plantType: {
         fontSize: 14,
         color: '#777', // Lighter text for the plant type
@@ -403,6 +425,7 @@ wateringSaveButton: {
   justifyContent: 'center',
   marginHorizontal: 10, // Add margin to separate buttons
 },
+
 buttonText: {
   color: theme.colors.onPrimary,
   fontSize: 16,

@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { updateLastWatered, getImages, deleteImage, updatePlantName as updatePlantNameInDB, updatePlantImage } from '@/app/utils/database';
+import { updateUserSchedule, updateLastWatered, getImages, deleteImage, updatePlantName as updatePlantNameInDB, updatePlantImage } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
 import { Button, Menu, Provider as PaperProvider, useTheme } from 'react-native-paper';
 import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
+import { format, parseISO } from 'date-fns';
 
 
 
@@ -23,7 +24,14 @@ export default function GardenScreen() {
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
 
-  const [images, setImages] = useState<{ id: number; name: string; uri: string; species: string }[]>([]);
+  const [images, setImages] = useState<{
+    id: number;
+    name: string;
+    uri: string;
+    species: string;
+    nextWateringDate?: string | null;
+    daysUntilNextWatering?: number | null;
+  }[]>([]);
 
   /*To allow user to change plant images after saving to garden */
   const [selectedImage, setSelectedImage] = useState<{ id: number; name: string; uri: string; species: string } | null>(null);
@@ -44,6 +52,9 @@ export default function GardenScreen() {
   const [fallWinterTo, setFallWinterTo] = useState('');
   const [fallWinterUnit, setFallWinterUnit] = useState('day');
 
+    // Add these state variables
+  const [recommendedWateringSchedule, setRecommendedWateringSchedule] = useState<{ spring_summer?: string; fall_winter?: string } | null>(null);
+  const [userWateringSchedule, setUserWateringSchedule] = useState<{ spring_summer?: string; fall_winter?: string } | null>(null);
   /*
   x = int, user input first day of range
   y = int, user input last day of range
@@ -59,6 +70,7 @@ export default function GardenScreen() {
   const [winterUnit, setWinterUnit] = useState('day'); // z for winter
   const [winterEnabled, setWinterEnabled] = useState(false); // toggle for winter
 
+  //const formattedDate = format(parseISO(dateString), 'MMMM do, yyyy');
 
   // Modals:
   const [modalVisible, setModalVisible] = useState(false);
@@ -109,10 +121,9 @@ export default function GardenScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      getImages(setImages);
+      refreshImagesData();
     }, [])
   );
-
 
 
   //used for scrollview in plant modal:
@@ -156,25 +167,32 @@ export default function GardenScreen() {
       family: image.family || 'Family information not available',
       sunlight: image.sunlight || 'Sunlight requirements not available',
       additionalCareTips: image.additionalCareTips || 'Additional care tips not available' //new
-      
+    
     });
       // Set watering schedule
-    const schedule = image.watering_schedule || null;
-    setPlantWateringSchedule(schedule);
+      const recommendedSchedule = image.watering_schedule || null;
+      const userSchedule = image.user_schedule || recommendedSchedule;
+    
+      setRecommendedWateringSchedule(recommendedSchedule);
+      setUserWateringSchedule(userSchedule);
     //console.log('index.tsx/104.Plant Watering Schedule:', schedule);// for debugging, show the plant watering schedule
     
     // Initialize seasonal watering inputs
-    setSpringSummerFrom(schedule?.spring_summer?.split(' ')[0] || '');
-    setSpringSummerTo(schedule?.spring_summer?.split(' ')[1] || '');
-    setFallWinterFrom(schedule?.fall_winter?.split(' ')[0] || '');
-    setFallWinterTo(schedule?.fall_winter?.split(' ')[1] || '');
+    setSpringSummerFrom(userSchedule?.spring_summer?.split(' ')[0] || '');
+    setSpringSummerTo(userSchedule?.spring_summer?.split(' ')[1] || '');
+    setFallWinterFrom(userSchedule?.fall_winter?.split(' ')[0] || '');
+    setFallWinterTo(userSchedule?.fall_winter?.split(' ')[1] || '');
 
-    // Set last watered date
+    // When setting lastWatered
     setLastWatered(image.lastWatered || null);
-
-    // Calculate next watering date
-    const nextDate = calculateNextWateringDate(schedule, image.lastWatered);
-    setNextWateringDate(nextDate);
+    
+    // When calculating next watering date
+    const nextDateInfo = calculateNextWateringDate(userSchedule, lastWatered);
+    if (nextDateInfo) {
+      setNextWateringDate(nextDateInfo.dueDate);
+    } else {
+      setNextWateringDate(null);
+    }
   };
   
 
@@ -228,80 +246,136 @@ export default function GardenScreen() {
 
   /******************** Watering Functions start here ***********/
 
+    const refreshImagesData = () => {
+    getImages((fetchedImages) => {
+      const updatedImages = fetchedImages.map((image) => {
+        const userSchedule = image.user_schedule || image.watering_schedule || null;
+        const lastWatered = image.lastWatered || null;
+        const nextWateringInfo = calculateNextWateringDate(userSchedule, lastWatered);
+        let daysUntilNextWatering = null;
+  
+        if (nextWateringInfo) {
+          const today = new Date();
+          const nextWatering = new Date(nextWateringInfo.dueDate);
+          const diffTime = nextWatering.getTime() - today.getTime();
+          daysUntilNextWatering = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+  
+        return {
+          ...image,
+          nextWateringDate: nextWateringInfo ? nextWateringInfo.dueDate : null,
+          daysUntilNextWatering,
+        };
+      });
+      setImages(updatedImages);
+    });
+  };
+    const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+    return date.toDateString();
+  };
+
   /**
    * Will calculate the next watering date based on the plant's watering schedule and last watered date.
    * @param schedule 
    * @param lastWateredDate 
    */
-  const calculateNextWateringDate = (schedule, lastWateredDate) => {
+
+  
+  const calculateNextWateringDate = (
+    schedule: { spring_summer?: string; fall_winter?: string },
+    lastWateredDate: string
+  ): { beginningWatering: string; dueDate: string } | null => {
     if (!schedule || !lastWateredDate) return null;
   
     // Determine the current season
     const month = new Date().getMonth(); // 0-11
     const isSpringSummer = month >= 2 && month <= 7; // March to August
-    const frequency = isSpringSummer ? schedule.spring_summer : schedule.fall_winter;
+    let frequency = isSpringSummer ? schedule.spring_summer : schedule.fall_winter;
+  
+    // Use spring_summer as default if fall_winter is null
+    if (!frequency) {
+      frequency = schedule.spring_summer;
+    }
   
     if (!frequency) return null;
   
-    // Parse the frequency (e.g., '7-10 days', 'once a week')
-    let daysToAdd = parseFrequencyToDays(frequency);
-    if (!daysToAdd) return null;
+    // Parse the frequency and calculate the next watering date
+    const result = parseFrequencyToDays(frequency, lastWateredDate);
+    if (!result) return null;
   
-    const lastWatered = new Date(lastWateredDate);
-    const nextWatering = new Date(lastWatered.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
-    return nextWatering.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    const { daysToAdd, beginningWatering, dueDate } = result;
+    return { beginningWatering, dueDate };
   };
-
   /*
     * Parses a watering frequency string and returns the average number of days.
     * @param frequency 
     */
-  
-  const parseFrequencyToDays = (frequency) => {
-    if (!frequency) return null;
+  const parseFrequencyToDays = (
+    frequency: string,
+    lastWateredDate: string
+  ): { daysToAdd: number; beginningWatering: string; dueDate: string } | null => {
+    if (!frequency || !lastWateredDate) return null;
     frequency = frequency.toLowerCase();
   
+    const lastWatered = new Date(lastWateredDate);
+    if (isNaN(lastWatered.getTime())) return null; // Check for invalid date
+  
+    let daysToAdd: number | null = null;
+    let beginningWatering = lastWatered.toISOString(); // ISO format
+    let dueDate: string | null = null;
+  
     if (frequency.includes('day')) {
-      const match = frequency.match(/(\d+)-?(\d+)?\s*day/);
+      const match = frequency.match(/(\d+)(?:-(\d+))?\s*day/);
       if (match) {
         const minDays = parseInt(match[1], 10);
         const maxDays = match[2] ? parseInt(match[2], 10) : minDays;
-        return Math.round((minDays + maxDays) / 2);
+        daysToAdd = Math.round((minDays + maxDays) / 2);
       }
     } else if (frequency.includes('week')) {
       const match = frequency.match(/(\d+)?\s*week/);
       const weeks = match[1] ? parseInt(match[1], 10) : 1;
-      return weeks * 7;
+      daysToAdd = weeks * 7;
     } else if (frequency.includes('month')) {
-      return 30; // Approximate a month as 30 days
+      const match = frequency.match(/(\d+)?\s*month/);
+      const months = match[1] ? parseInt(match[1], 10) : 1;
+      daysToAdd = months * 30; // Approximate a month as 30 days
     }
   
-    return null;
+    if (daysToAdd !== null) {
+      const nextWatering = new Date(lastWatered.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+      dueDate = nextWatering.toISOString(); // ISO format
+    }
+  
+    return daysToAdd !== null && dueDate
+      ? { daysToAdd, beginningWatering, dueDate }
+      : null;
   };
   
   const handleWaterPlant = async () => {
     if (selectedImage) {
-      const currentDate = new Date().toISOString();
+      try {
+        const currentDate = new Date().toISOString();
+        await updateLastWatered(selectedImage.id, currentDate);
+        setLastWatered(currentDate);
+        setNextWateringDate(calculateNextWateringDate(userWateringSchedule, currentDate)?.dueDate || null);
+        alert('Plant has been watered!');
+        
+        // Refresh images data
+        refreshImagesData();
   
-      // Update the database
-      await updateLastWatered(selectedImage.id, currentDate);
-  
-      // Update state
-      setLastWatered(currentDate);
-  
-      // Recalculate next watering date
-      const nextDate = calculateNextWateringDate(plantWateringSchedule, currentDate);
-      setNextWateringDate(nextDate);
-  
-      Toast.show({
-        type: 'success',
-        text1: 'Success',
-        text2: 'Plant has been marked as watered.'
-      });
+        // Close the modal if desired
+        // setModalVisible(false);
+      } catch (error) {
+        console.error('Error updating lastWatered:', error);
       }
+    }
   };
 
-  const handleSaveWateringSchedule = () => {
+  const handleSaveWateringSchedule = async () => {
     // Format summer and winter schedules with user inputs
     const summerSchedule = customSummerTo
       ? `${customSummerFrom}-${customSummerTo} ${summerUnit}`
@@ -312,19 +386,40 @@ export default function GardenScreen() {
         : `${customWinterFrom} ${winterUnit}`
       : null;
   
-    // Update the watering schedule
-    setPlantWateringSchedule({ spring_summer: summerSchedule, fall_winter: winterSchedule });
+    const userSchedule = { spring_summer: summerSchedule, fall_winter: winterSchedule };
   
-    // Calculate next watering date with the updated schedule
-    const nextDate = calculateNextWateringDate(
-      { spring_summer: summerSchedule, fall_winter: winterSchedule },
-      lastWatered
-    );
-    setNextWateringDate(nextDate);
+    // Update the watering schedule state
+    setUserWateringSchedule(userSchedule);
   
-    setWateringScheduleModalVisible(false);
+    if (selectedImage) {
+      try {
+        await updateUserSchedule(selectedImage.id, userSchedule);
+  
+        // Recalculate next watering date with the updated user schedule
+        const nextDateInfo = calculateNextWateringDate(userSchedule, lastWatered);
+        setNextWateringDate(nextDateInfo ? nextDateInfo.dueDate : null);
+  
+        // Refresh images data
+        refreshImagesData();
+  
+        // Optionally show a success message
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Watering schedule updated successfully.',
+        });
+      } catch (error) {
+        console.error('Error updating watering schedule:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to update watering schedule. Please try again.',
+        });
+      }
+    } else {
+      alert('No plant selected.');
+    }
   };
-  
   
     // Rename Plant Handler:
 
@@ -514,30 +609,46 @@ export default function GardenScreen() {
 
       {/* Sort Dropdown Menu */}
       <View style={styles.menuContainer}>
-        <Menu
-          visible={sortMenuVisible}
-          onDismiss={closeSortMenu}
-          anchor={
-            <Button mode="contained" onPress={openSortMenu} style={styles.sortButton}>
-              Sort
-            </Button>
-          }
-        >
-          <Menu.Item onPress={() => handleSort('name')} title="Sort by Name" />
-          <Menu.Item onPress={() => handleSort('species')} title="Sort by Species" />
-        </Menu>
-      </View>
+      <Menu
+        visible={sortMenuVisible}
+        onDismiss={closeSortMenu}
+        anchor={
+          <Button mode="contained" onPress={openSortMenu} style={styles.sortButton}>
+            Sort
+          </Button>
+        }
+      >
+        <Menu.Item onPress={() => handleSort('name')} title="Sort by Name" />
+        <Menu.Item onPress={() => handleSort('species')} title="Sort by Species" />
+      </Menu>
+    </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {images.map((image, index) => (
-          <TouchableOpacity key={index} onPress={() => handleImageClick(image)}>
-            <View style={styles.plantContainer}>
-              <Image source={{ uri: image.uri }} style={styles.plantImage} />
-              <Text style={styles.plantName}>{image.name}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      {images.map((image, index) => (
+        <TouchableOpacity key={index} onPress={() => handleImageClick(image)}>
+          <View style={styles.plantContainer}>
+            <Image source={{ uri: image.uri }} style={styles.plantImage} />
+            <Text style={styles.plantName}>{image.name}</Text>
+            {image.daysUntilNextWatering != null ? (
+              image.daysUntilNextWatering >= 0 ? (
+                <Text style={styles.wateringInfo}>
+                  Water in {image.daysUntilNextWatering} day
+                  {image.daysUntilNextWatering !== 1 ? 's' : ''}
+                </Text>
+              ) : (
+                <Text style={styles.overdueWateringInfo}>
+                  Overdue by {Math.abs(image.daysUntilNextWatering)} day
+                  {Math.abs(image.daysUntilNextWatering) !== 1 ? 's' : ''}
+                </Text>
+              )
+            ) : (
+              <Text style={styles.wateringInfo}>Watering info not available</Text>
+            )}
+
+          </View>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
 
 
 {/* Modal for full image view and plant information*/}
@@ -612,9 +723,13 @@ export default function GardenScreen() {
 
   <View style={styles.divider} />
   <Text style={styles.modalsubText}>Last watered on:</Text>
-  <Text style={styles.modalText}>{lastWatered ? new Date(lastWatered).toDateString() : 'Not recorded'}</Text>
+  <Text style={styles.modalText}>
+    {lastWatered ? formatDate(lastWatered) : 'Not recorded'}
+  </Text>
   <Text style={styles.modalsubText}>Next watering due on:</Text>
-  <Text style={styles.modalText}>{nextWateringDate ? new Date(nextWateringDate).toDateString() : 'Cannot calculate'}</Text>
+  <Text style={styles.modalText}>
+    {nextWateringDate ? formatDate(nextWateringDate) : 'Cannot calculate'}
+  </Text>
 
 
 </View>
@@ -720,25 +835,24 @@ animationOut={'fadeOut'}
     <View style={styles.infoContainer}>
       <Text style={styles.infoTitle}>Recommended Watering</Text>
       <Text style={styles.modalText}>
-        Summer: water every {plantWateringSchedule?.spring_summer || 'Not set'}
+        Summer: water every {recommendedWateringSchedule?.spring_summer || 'Not set'}
       </Text>
       <Text style={styles.modalText}>
-        Winter: water every {plantWateringSchedule?.fall_winter || 'Not set'}
+        Winter: water every {recommendedWateringSchedule?.fall_winter || 'Not set'}
       </Text>
     </View>
-
+    
     {/* Current Watering Schedule */}
     <View style={styles.infoContainer}>
       <Text style={styles.infoTitle}>Current Watering Schedule</Text>
-
       <Text style={styles.modalText}>
-        Summer: water every {plantWateringSchedule?.spring_summer || 'Not set'}
+        Summer: water every {userWateringSchedule?.spring_summer || 'Not set'}
       </Text>
       <Text style={styles.modalText}>
-        Winter: water every {plantWateringSchedule?.fall_winter || 'Not set'}
+        Winter: water every {userWateringSchedule?.fall_winter || 'Not set'}
       </Text>
       <View style={styles.divider} />
-
+    
       <Text style={styles.modalsubText}>Last watered on:</Text>
       <Text style={styles.modalText}>
         {lastWatered ? new Date(lastWatered).toDateString() : 'Not recorded'}

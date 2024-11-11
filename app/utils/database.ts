@@ -22,6 +22,7 @@ export const createTable = async () => {
       sunlight TEXT,
       additionalCareTips TEXT,
       watering_schedule TEXT,   -- Added watering_schedule field as TEXT to store JSON
+      user_schedule TEXT,   -- Added user_schedule field
       lastWatered TIMESTAMP     -- Added lastWatered field
     );
   `);
@@ -51,15 +52,14 @@ export const dropTables = async () => {
 
 /* 
 WARNING: This will delete all data in the database
-
-dropTables();
-
 */
+
+//dropTables();
+
 
 
 // Insert an image into the database
 // Modify your insertImage function to include watering_schedule:
-
 export const insertImage = async (
   name: string,
   uri: string,
@@ -72,17 +72,34 @@ export const insertImage = async (
   family: string,
   sunlight: string,
   additionalCareTips: string,
-  watering_schedule?: { spring_summer?: string; fall_winter?: string } // Added watering_schedule parameter
-  
-) => {
+  watering_schedule?: { spring_summer?: string; fall_winter?: string },
+  user_schedule?: { spring_summer?: string; fall_winter?: string },
+  lastWatered?: string // Add lastWatered parameter
+): Promise<number> => {
   const db = await dbPromise;
 
-  // Convert watering_schedule to JSON string if it exists
+  // Convert schedules to JSON strings
   const wateringScheduleJSON = watering_schedule ? JSON.stringify(watering_schedule) : null;
+  const userScheduleJSON = user_schedule ? JSON.stringify(user_schedule) : wateringScheduleJSON;
 
-  await db.runAsync(
-    `INSERT INTO images (name, uri, species, description, watering, poisonousToHumans, poisonousToPets, scientificName, family, sunlight, additionalCareTips, watering_schedule)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+  // Insert the image and get the result
+  const result = await db.runAsync(
+    `INSERT INTO images (
+      name,
+      uri,
+      species,
+      description,
+      watering,
+      poisonousToHumans,
+      poisonousToPets,
+      scientificName,
+      family,
+      sunlight,
+      additionalCareTips,
+      watering_schedule,
+      user_schedule,
+      lastWatered
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       name,
       uri,
@@ -96,11 +113,15 @@ export const insertImage = async (
       sunlight,
       additionalCareTips,
       wateringScheduleJSON,
-      null, // Set lastWatered to null initially
+      userScheduleJSON,
+      lastWatered || null // Use provided lastWatered or set to null
     ]
   );
-};
 
+  // Get the last inserted ID
+  const { insertId } = result;
+  return insertId;
+};
 
 // Get all images from the database
 // Modify your getImages function as follows:
@@ -118,9 +139,9 @@ export const getImages = async (callback: (images: {
   family: string,
   sunlight: string,
   additionalCareTips: string,
-  watering_schedule?: { spring_summer?: string; fall_winter?: string }, // Include watering_schedule in the type definition
-  lastWatered: string | null // Corrected type definition
-
+  watering_schedule?: { spring_summer?: string; fall_winter?: string },
+  user_schedule?: { spring_summer?: string; fall_winter?: string }, // Include user_schedule
+  lastWatered: string | null
 }[]) => void) => {
   const db = await dbPromise;
   const rows = await db.getAllAsync('SELECT * FROM images;');
@@ -137,9 +158,9 @@ export const getImages = async (callback: (images: {
     family: row.family,
     sunlight: row.sunlight,
     additionalCareTips: row.additionalCareTips,
-    watering_schedule: row.watering_schedule ? JSON.parse(row.watering_schedule) : undefined, // Parse watering_schedule from JSON
+    watering_schedule: row.watering_schedule ? JSON.parse(row.watering_schedule) : undefined,
+    user_schedule: row.user_schedule ? JSON.parse(row.user_schedule) : undefined, // Parse user_schedule
     lastWatered: row.lastWatered || null,
-
   }));
   callback(images);
 };
@@ -160,6 +181,25 @@ export const updateLastWatered = async (id: number, lastWateredDate: string) => 
   }
 };
 
+export const updateUserSchedule = async (
+  id: number,
+  user_schedule: { spring_summer?: string; fall_winter?: string }
+) => {
+  const db = await dbPromise;
+  const userScheduleJSON = JSON.stringify(user_schedule);
+
+  try {
+    await db.runAsync('UPDATE images SET user_schedule = ? WHERE id = ?;', [
+      userScheduleJSON,
+      id,
+    ]);
+    console.log(`Updated user_schedule for plant ID ${id}`);
+    return true;
+  } catch (error) {
+    console.error('Failed to update user_schedule:', error);
+    return false;
+  }
+};
 
 // Update a plant's name in the database
 export const updatePlantName = async (id: number, newName: string) => {

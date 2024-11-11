@@ -3,7 +3,7 @@ import { View, Text, TextInput, ScrollView, Image, Alert, Dimensions, Platform, 
 import { useRoute, RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import { Button, Provider as PaperProvider, useTheme, MD3Theme } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
-import { insertImage, getImages, createTable } from '@/app/utils/database';
+import { updateLastWatered, insertImage, getImages, createTable } from '@/app/utils/database';
 import { identifyPlant } from '@/scripts/Pl@ntNetAPI'; // Import the identifyPlant function
 import { makeStyles } from '@/app/res/styles/addPhotoStyles'; // Import the styles
 import axios from 'axios';
@@ -170,34 +170,24 @@ export default function AddPhotoScreen() {
 
   // Handle Save to Garden button press
   const handleSaveToGarden = async () => {
-    if (image && plantName ) {
+    if (image && plantName) {
       try {
-              const description = speciesData?.description || 'Unknown';
-              const watering = speciesData?.watering || 'Unknown';
-              const poisonousToHumans = speciesData?.poisonousToHumans || 'Unknown'; // Assuming false is the default
-              const poisonousToPets = speciesData?.poisonousToPets || 'Unknown'; // Assuming false is the default
-              const scientificName = speciesData?.scientificName || 'Unknown';
-              const family = speciesData?.family || 'Unknown';
-              const sunlight = speciesData?.sunlight || 'Unknown';
-              const additionalCareTips=speciesData?.additionalCareTips|| 'Unknown'; //added additionalCareTips for extra info
-              // Extract watering_schedule if available
-              const watering_schedule = speciesData?.watering_schedule || undefined;
-        // Insert the image URI into the database
-      /*----------------------Joel-----------------------------*/
-      console.log('Species Info:', {
-             description,
-             watering,
-             poisonousToHumans,
-             poisonousToPets,
-             scientificName,
-             family,
-             sunlight,
-             additionalCareTips,
-             watering_schedule,
-
-           });
-       /*----------------------Joel-----------------------------*/
-        await insertImage(
+        const description = speciesData?.description || 'Unknown';
+        const watering = speciesData?.watering || 'Unknown';
+        const poisonousToHumans = speciesData?.poisonousToHumans || 'Unknown';
+        const poisonousToPets = speciesData?.poisonousToPets || 'Unknown';
+        const scientificName = speciesData?.scientificName || 'Unknown';
+        const family = speciesData?.family || 'Unknown';
+        const sunlight = speciesData?.sunlight || 'Unknown';
+        const additionalCareTips = speciesData?.additionalCareTips || 'Unknown';
+        const watering_schedule = speciesData?.watering_schedule || undefined;
+        const user_schedule = watering_schedule ? { ...watering_schedule } : undefined;
+  
+        // Get the current date for lastWatered
+        const currentDate = new Date().toISOString();
+  
+        // Insert the image and get the new plant ID
+        const plantId = await insertImage(
           plantName,
           image,
           plantSpecies || 'Unknown',
@@ -209,20 +199,19 @@ export default function AddPhotoScreen() {
           family,
           sunlight,
           additionalCareTips,
-          watering_schedule // Pass the watering_schedule parameter
-
+          watering_schedule,
+          user_schedule,
+          currentDate // Pass lastWatered as current date
         );
-        console.log('Image inserted successfully');
+  
+        console.log('Image inserted successfully with lastWatered date');
         setLoadingMessage('Saving to garden...');
-
+  
         // Fetch the updated list of images
         getImages((images) => {
           setLoadingMessage(null);
-          setImage(null); // Clear the image from the view
-          setPlantName(''); // Clear the plant name
-          setPlantSpecies('Unknown');
-          setSpeciesData(null);// Clear the plant species
-          navigation.navigate('index', { images }); // Pass the updated images to the garden screen
+          resetState(); // Clear the form fields
+          navigation.navigate('index', { images }); // Navigate to the garden screen
         });
       } catch (error) {
         console.error('Error saving to garden:', error);
