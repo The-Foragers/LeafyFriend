@@ -1,50 +1,129 @@
 import React, { useCallback, useState, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { getImages, deleteImage, updatePlantName as updatePlantNameInDB, updatePlantImage } from '@/app/utils/database';
+import { updateUserSchedule, updateLastWatered, getImages, deleteImage, updatePlantName as updatePlantNameInDB, updatePlantImage } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
 import { Button, Menu, Provider as PaperProvider, useTheme } from 'react-native-paper';
 import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
 import Modal from 'react-native-modal';
-import Icon from 'react-native-ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { 
-  View, Text, TextInput, StyleSheet, Image, ScrollView, ActionSheetIOS,Platform,
-  TouchableOpacity, Alert, NativeSyntheticEvent, NativeScrollEvent, Dimensions 
+  View, Text, TextInput, StyleSheet, Image, ScrollView, ActionSheetIOS, Platform,
+  TouchableOpacity, Alert, NativeSyntheticEvent, NativeScrollEvent, Dimensions, Switch 
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import Toast from 'react-native-toast-message';
+import { format, parseISO } from 'date-fns';
+
 
 
 export default function GardenScreen() {
+  // themes and styles and UI
   const theme = useTheme();
   const styles = makeStyles(theme);
-  const [images, setImages] = useState<{ id: number; name: string; uri: string; species: string }[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [sortMenuVisible, setSortMenuVisible,] = useState(false);
   const {width, height } = Dimensions.get('window');
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
-    /**
-     This is set up this way to avoid two modal open at the same time which causes  a bug
-     It will first close which ever modal is open and then open a new one
-     */
-    const [openNextModal, setOpenNextModal] = useState(false); // Flag to open next modal after closing the first
-    /*Modal, modal and more modal */
-    const [openWateringScheduleNext, setOpenWateringScheduleNext] = useState(false); // New flag for the watering schedule
-    const [wateringScheduleModalVisible, setWateringScheduleModalVisible] = useState(false);
-    const [menuModalVisible, setMenuModalVisible] = useState(false); //settings menu for each plant
 
-    /*To allow user to change plant images after saving to garden */
-    const [selectedImage, setSelectedImage] = useState<{ id: number; name: string; uri: string; species: string } | null>(null);
-    const [newPlantName, setNewPlantName] = useState('');
-    const [newImageUri, setNewImageUri] = useState('');
-    const [editModalVisible, setEditModalVisible] = useState(false);
-    const [openEditModalNext, setOpenEditModalNext] = useState(false); // Flag for opening edit modal after closing current
-    
-    useFocusEffect(
-      useCallback(() => {
-        getImages(setImages);
-      }, [])
-    );
+  const [images, setImages] = useState<{
+    id: number;
+    name: string;
+    uri: string;
+    species: string;
+    nextWateringDate?: string | null;
+    daysUntilNextWatering?: number | null;
+  }[]>([]);
 
+  /*To allow user to change plant images after saving to garden */
+  const [selectedImage, setSelectedImage] = useState<{ id: number; name: string; uri: string; species: string } | null>(null);
+  const [newPlantName, setNewPlantName] = useState('');
+  const [newImageUri, setNewImageUri] = useState('');
+
+  // waterring plant functions
+  const [plantWateringSchedule, setPlantWateringSchedule] = useState<{ spring_summer?: string; fall_winter?: string } | null>(null);
+  const [lastWatered, setLastWatered] = useState<string | null>(null);
+  const [nextWateringDate, setNextWateringDate] = useState<string | null>(null);
+  // Seasonal watering inputs
+  const [seasonalWatering, setSeasonalWatering] = useState(false);
+  const [springSummerFrom, setSpringSummerFrom] = useState('');
+  const [springSummerTo, setSpringSummerTo] = useState('');
+  const [springSummerUnit, setSpringSummerUnit] = useState('day');
+
+  const [fallWinterFrom, setFallWinterFrom] = useState('');
+  const [fallWinterTo, setFallWinterTo] = useState('');
+  const [fallWinterUnit, setFallWinterUnit] = useState('day');
+
+    // Add these state variables
+  const [recommendedWateringSchedule, setRecommendedWateringSchedule] = useState<{ spring_summer?: string; fall_winter?: string } | null>(null);
+  const [userWateringSchedule, setUserWateringSchedule] = useState<{ spring_summer?: string; fall_winter?: string } | null>(null);
+  /*
+  x = int, user input first day of range
+  y = int, user input last day of range
+  z = string, user input unit of time (day, week, month) default is day
+  Winter is optional
+  */
+  const [customSummerFrom, setCustomSummerFrom] = useState(''); // x for summer
+  const [customSummerTo, setCustomSummerTo] = useState(''); // y for summer
+  const [summerUnit, setSummerUnit] = useState('day'); // z for summer
+
+  const [customWinterFrom, setCustomWinterFrom] = useState(''); // x for winter
+  const [customWinterTo, setCustomWinterTo] = useState(''); // y for winter
+  const [winterUnit, setWinterUnit] = useState('day'); // z for winter
+  const [winterEnabled, setWinterEnabled] = useState(false); // toggle for winter
+
+  //const formattedDate = format(parseISO(dateString), 'MMMM do, yyyy');
+
+  // Modals:
+  const [modalVisible, setModalVisible] = useState(false);
+  const [sortMenuVisible, setSortMenuVisible,] = useState(false);
+  /**
+   This is set up this way to avoid two modal open at the same time which causes  a bug
+  It will first close which ever modal is open and then open a new one
+  */
+  const [openNextModal, setOpenNextModal] = useState(false); // Flag to open next modal after closing the first
+  const [openWateringScheduleNext, setOpenWateringScheduleNext] = useState(false); // New flag for the watering schedule
+  const [wateringScheduleModalVisible, setWateringScheduleModalVisible] = useState(false);
+  const [menuModalVisible, setMenuModalVisible] = useState(false); //settings menu for each plant
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [openEditModalNext, setOpenEditModalNext] = useState(false); // Flag for opening edit modal after closing current
+  
+  /*
+                    Modal Functions:
+  These functions are for the modals to be opened one after the other
+  if main menu is open and you click "rename plant" it will close the main menu and open the rename plant modal
+  Necessary to avoid two modals being open at the same time, which causes a bug
+   */
+  
+  
+  const openMenuModal = () => {
+    setOpenNextModal(true); // Set flag to open menu modal after main modal closes
+    setModalVisible(false); // Close main modal
+  };
+
+  const handleWateringSchedule = () => {
+    setOpenWateringScheduleNext(true); // Set flag to open watering schedule modal
+    setMenuModalVisible(false); // Close the menu modal
+  };
+
+  // Function to open the rename plant modal
+  const openRenameModal = () => {
+    setOpenEditModalNext(true); // Set the flag to open the rename modal
+    setMenuModalVisible(false); // Close the menu modal
+  };
+
+    //change photo modal
+  const handleChangePhoto = () => {
+    setMenuModalVisible(false); // Close the menu modal
+    setTimeout(() => {
+      handleAddPhotoPress(); // Start the photo selection process after a short delay
+    }, 500); // Delay in milliseconds (adjust as needed)
+  };
+  /**End of dumb functions to close and open modals thx - if you find another solution for this go for it :)*/
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshImagesData();
+    }, [])
+  );
 
 
   //used for scrollview in plant modal:
@@ -79,7 +158,6 @@ export default function GardenScreen() {
     //console.log("Selected Image ID:", image.id); // for debugging, show the selected plant id
     setSelectedImage(image);
     setModalVisible(true);
-
     setPlantInfo({
       description: image.description || 'Description not available',
       watering: image.watering || 'Watering information not available',
@@ -89,7 +167,32 @@ export default function GardenScreen() {
       family: image.family || 'Family information not available',
       sunlight: image.sunlight || 'Sunlight requirements not available',
       additionalCareTips: image.additionalCareTips || 'Additional care tips not available' //new
+    
     });
+      // Set watering schedule
+      const recommendedSchedule = image.watering_schedule || null;
+      const userSchedule = image.user_schedule || recommendedSchedule;
+    
+      setRecommendedWateringSchedule(recommendedSchedule);
+      setUserWateringSchedule(userSchedule);
+    //console.log('index.tsx/104.Plant Watering Schedule:', schedule);// for debugging, show the plant watering schedule
+    
+    // Initialize seasonal watering inputs
+    setSpringSummerFrom(userSchedule?.spring_summer?.split(' ')[0] || '');
+    setSpringSummerTo(userSchedule?.spring_summer?.split(' ')[1] || '');
+    setFallWinterFrom(userSchedule?.fall_winter?.split(' ')[0] || '');
+    setFallWinterTo(userSchedule?.fall_winter?.split(' ')[1] || '');
+
+    // When setting lastWatered
+    setLastWatered(image.lastWatered || null);
+    
+    // When calculating next watering date
+    const nextDateInfo = calculateNextWateringDate(userSchedule, lastWatered);
+    if (nextDateInfo) {
+      setNextWateringDate(nextDateInfo.dueDate);
+    } else {
+      setNextWateringDate(null);
+    }
   };
   
 
@@ -136,41 +239,198 @@ export default function GardenScreen() {
     setSortMenuVisible(false); // Close the menu after selection
   };
 
+  /**Sorting menu */
   const openSortMenu = () => setSortMenuVisible(true);
   const closeSortMenu = () => setSortMenuVisible(false);
 
-  // Function to open the menu modal after closing the main modal
-  const openMenuModal = () => {
-    setOpenNextModal(true); // Set flag to open menu modal after main modal closes
-    setModalVisible(false); // Close main modal
-  };
-  
-  /*
-   * Watering Schedule Modal
-  These two are for the modals to be opened after the main modal is closed
-  Necessary to avoid two modals being open at the same time, which causes a bug
-   */
-  const handleWateringSchedule = () => {
-    setOpenWateringScheduleNext(true); // Set flag to open watering schedule modal
-    setMenuModalVisible(false); // Close the menu modal
-  };
-  
-// Function to open the rename modal
-const openRenameModal = () => {
-  setOpenEditModalNext(true); // Set the flag to open the rename modal
-  setMenuModalVisible(false); // Close the menu modal
-};
 
-    // Rename Plant Handler
+  /******************** Watering Functions start here ***********/
+
+    const refreshImagesData = () => {
+    getImages((fetchedImages) => {
+      const updatedImages = fetchedImages.map((image) => {
+        const userSchedule = image.user_schedule || image.watering_schedule || null;
+        const lastWatered = image.lastWatered || null;
+        const nextWateringInfo = calculateNextWateringDate(userSchedule, lastWatered);
+        let daysUntilNextWatering = null;
+  
+        if (nextWateringInfo) {
+          const today = new Date();
+          const nextWatering = new Date(nextWateringInfo.dueDate);
+          const diffTime = nextWatering.getTime() - today.getTime();
+          daysUntilNextWatering = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+  
+        return {
+          ...image,
+          nextWateringDate: nextWateringInfo ? nextWateringInfo.dueDate : null,
+          daysUntilNextWatering,
+        };
+      });
+      setImages(updatedImages);
+    });
+  };
+    const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+    return date.toDateString();
+  };
+
+  /**
+   * Will calculate the next watering date based on the plant's watering schedule and last watered date.
+   * @param schedule 
+   * @param lastWateredDate 
+   */
+
+  
+  const calculateNextWateringDate = (
+    schedule: { spring_summer?: string; fall_winter?: string },
+    lastWateredDate: string
+  ): { beginningWatering: string; dueDate: string } | null => {
+    if (!schedule || !lastWateredDate) return null;
+  
+    // Determine the current season
+    const month = new Date().getMonth(); // 0-11
+    const isSpringSummer = month >= 2 && month <= 7; // March to August
+    let frequency = isSpringSummer ? schedule.spring_summer : schedule.fall_winter;
+  
+    // Use spring_summer as default if fall_winter is null
+    if (!frequency) {
+      frequency = schedule.spring_summer;
+    }
+  
+    if (!frequency) return null;
+  
+    // Parse the frequency and calculate the next watering date
+    const result = parseFrequencyToDays(frequency, lastWateredDate);
+    if (!result) return null;
+  
+    const { daysToAdd, beginningWatering, dueDate } = result;
+    return { beginningWatering, dueDate };
+  };
+  /*
+    * Parses a watering frequency string and returns the average number of days.
+    * @param frequency 
+    */
+  const parseFrequencyToDays = (
+    frequency: string,
+    lastWateredDate: string
+  ): { daysToAdd: number; beginningWatering: string; dueDate: string } | null => {
+    if (!frequency || !lastWateredDate) return null;
+    frequency = frequency.toLowerCase();
+  
+    const lastWatered = new Date(lastWateredDate);
+    if (isNaN(lastWatered.getTime())) return null; // Check for invalid date
+  
+    let daysToAdd: number | null = null;
+    let beginningWatering = lastWatered.toISOString(); // ISO format
+    let dueDate: string | null = null;
+  
+    if (frequency.includes('day')) {
+      const match = frequency.match(/(\d+)(?:-(\d+))?\s*day/);
+      if (match) {
+        const minDays = parseInt(match[1], 10);
+        const maxDays = match[2] ? parseInt(match[2], 10) : minDays;
+        daysToAdd = Math.round((minDays + maxDays) / 2);
+      }
+    } else if (frequency.includes('week')) {
+      const match = frequency.match(/(\d+)?\s*week/);
+      const weeks = match[1] ? parseInt(match[1], 10) : 1;
+      daysToAdd = weeks * 7;
+    } else if (frequency.includes('month')) {
+      const match = frequency.match(/(\d+)?\s*month/);
+      const months = match[1] ? parseInt(match[1], 10) : 1;
+      daysToAdd = months * 30; // Approximate a month as 30 days
+    }
+  
+    if (daysToAdd !== null) {
+      const nextWatering = new Date(lastWatered.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+      dueDate = nextWatering.toISOString(); // ISO format
+    }
+  
+    return daysToAdd !== null && dueDate
+      ? { daysToAdd, beginningWatering, dueDate }
+      : null;
+  };
+  
+  const handleWaterPlant = async () => {
+    if (selectedImage) {
+      try {
+        const currentDate = new Date().toISOString();
+        await updateLastWatered(selectedImage.id, currentDate);
+        setLastWatered(currentDate);
+        setNextWateringDate(calculateNextWateringDate(userWateringSchedule, currentDate)?.dueDate || null);
+        alert('Plant has been watered!');
+        
+        // Refresh images data
+        refreshImagesData();
+  
+        // Close the modal if desired
+        // setModalVisible(false);
+      } catch (error) {
+        console.error('Error updating lastWatered:', error);
+      }
+    }
+  };
+
+  const handleSaveWateringSchedule = async () => {
+    // Format summer and winter schedules with user inputs
+    const summerSchedule = customSummerTo
+      ? `${customSummerFrom}-${customSummerTo} ${summerUnit}`
+      : `${customSummerFrom} ${summerUnit}`;
+    const winterSchedule = winterEnabled
+      ? customWinterTo
+        ? `${customWinterFrom}-${customWinterTo} ${winterUnit}`
+        : `${customWinterFrom} ${winterUnit}`
+      : null;
+  
+    const userSchedule = { spring_summer: summerSchedule, fall_winter: winterSchedule };
+  
+    // Update the watering schedule state
+    setUserWateringSchedule(userSchedule);
+  
+    if (selectedImage) {
+      try {
+        await updateUserSchedule(selectedImage.id, userSchedule);
+  
+        // Recalculate next watering date with the updated user schedule
+        const nextDateInfo = calculateNextWateringDate(userSchedule, lastWatered);
+        setNextWateringDate(nextDateInfo ? nextDateInfo.dueDate : null);
+  
+        // Refresh images data
+        refreshImagesData();
+  
+        // Optionally show a success message
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Watering schedule updated successfully.',
+        });
+      } catch (error) {
+        console.error('Error updating watering schedule:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to update watering schedule. Please try again.',
+        });
+      }
+    } else {
+      alert('No plant selected.');
+    }
+  };
+  
+    // Rename Plant Handler:
 
     // Update plant name in the database
     const updatePlantName = async (id, newName) => {
       try {
-        console.log(`Updating plant with ID ${id} to new name: ${newName}`);
+        //console.log(`Updating plant with ID ${id} to new name: ${newName}`);
         await updatePlantNameInDB(id, newName); // Call the database update function
         return true; // Return true if the update was successful.
       } catch (error) {
-        console.error("Failed to update plant name:", error);
+        console.error("index.updatePlantName - Failed to update plant name:", error);
         return false; // Return false if there was an error.
       }
     };
@@ -271,6 +531,8 @@ const openRenameModal = () => {
         confirmReplacePhoto(uri);
       }
     };
+
+    //simple alert to confirm the user wants to replace the photo
     const confirmReplacePhoto = (newUri) => {
       Alert.alert(
         'Replace Picture?',
@@ -282,6 +544,8 @@ const openRenameModal = () => {
         { cancelable: true }
       );
     };
+
+    // Replace the photo in the database and state
     const handleReplacePhoto = async (newUri) => {
       if (selectedImage) {
         // Update image in the database
@@ -295,26 +559,28 @@ const openRenameModal = () => {
           );
           // Update the selected image
           setSelectedImage((prev) => ({ ...prev, uri: newUri }));
-          Alert.alert('Success', 'Plant image updated successfully.');
+          Toast.show({
+            type: 'success',
+            text1: 'Success',
+            text2: 'Plant image updated successfully.'
+          });
         } else {
-          Alert.alert('Error', 'Failed to update plant image. Please try again.');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Failed to update plant image. Please try again.'
+          });
         }
       } else {
-        Alert.alert('Error', 'No plant selected.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'No plant selected.'
+        });
       }
     };
     
 
-    const handleChangePhoto = () => {
-      setMenuModalVisible(false); // Close the menu modal
-      setTimeout(() => {
-        handleAddPhotoPress(); // Start the photo selection process after a short delay
-      }, 500); // Delay in milliseconds (adjust as needed)
-    };
-    
-
-    
-    
       /* 
     End of handling the photo change
      */
@@ -328,10 +594,9 @@ const openRenameModal = () => {
     alert('Settings button pressed');
   };
 
-  const handleWaterPlant = () => {
-    // Logic to rename the plant
-    alert('Plant Watered');
-  };
+
+  
+  
 
 
   
@@ -344,30 +609,46 @@ const openRenameModal = () => {
 
       {/* Sort Dropdown Menu */}
       <View style={styles.menuContainer}>
-        <Menu
-          visible={sortMenuVisible}
-          onDismiss={closeSortMenu}
-          anchor={
-            <Button mode="contained" onPress={openSortMenu} style={styles.sortButton}>
-              Sort
-            </Button>
-          }
-        >
-          <Menu.Item onPress={() => handleSort('name')} title="Sort by Name" />
-          <Menu.Item onPress={() => handleSort('species')} title="Sort by Species" />
-        </Menu>
-      </View>
+      <Menu
+        visible={sortMenuVisible}
+        onDismiss={closeSortMenu}
+        anchor={
+          <Button mode="contained" onPress={openSortMenu} style={styles.sortButton}>
+            Sort
+          </Button>
+        }
+      >
+        <Menu.Item onPress={() => handleSort('name')} title="Sort by Name" />
+        <Menu.Item onPress={() => handleSort('species')} title="Sort by Species" />
+      </Menu>
+    </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {images.map((image, index) => (
-          <TouchableOpacity key={index} onPress={() => handleImageClick(image)}>
-            <View style={styles.plantContainer}>
-              <Image source={{ uri: image.uri }} style={styles.plantImage} />
-              <Text style={styles.plantName}>{image.name}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      {images.map((image, index) => (
+        <TouchableOpacity key={index} onPress={() => handleImageClick(image)}>
+          <View style={styles.plantContainer}>
+            <Image source={{ uri: image.uri }} style={styles.plantImage} />
+            <Text style={styles.plantName}>{image.name}</Text>
+            {image.daysUntilNextWatering != null ? (
+              image.daysUntilNextWatering >= 0 ? (
+                <Text style={styles.wateringInfo}>
+                  Water in {image.daysUntilNextWatering} day
+                  {image.daysUntilNextWatering !== 1 ? 's' : ''}
+                </Text>
+              ) : (
+                <Text style={styles.overdueWateringInfo}>
+                  Overdue by {Math.abs(image.daysUntilNextWatering)} day
+                  {Math.abs(image.daysUntilNextWatering) !== 1 ? 's' : ''}
+                </Text>
+              )
+            ) : (
+              <Text style={styles.wateringInfo}>Watering info not available</Text>
+            )}
+
+          </View>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
 
 
 {/* Modal for full image view and plant information*/}
@@ -439,6 +720,17 @@ const openRenameModal = () => {
 <View style={styles.infoContainer}>
   <Text style={styles.infoTitle}>Watering</Text>
   <Text style={styles.modalText}>{plantInfo?.watering}</Text>
+
+  <View style={styles.divider} />
+  <Text style={styles.modalsubText}>Last watered on:</Text>
+  <Text style={styles.modalText}>
+    {lastWatered ? formatDate(lastWatered) : 'Not recorded'}
+  </Text>
+  <Text style={styles.modalsubText}>Next watering due on:</Text>
+  <Text style={styles.modalText}>
+    {nextWateringDate ? formatDate(nextWateringDate) : 'Cannot calculate'}
+  </Text>
+
 
 </View>
 
@@ -523,21 +815,152 @@ const openRenameModal = () => {
 
 
       {/* Watering Schedule Modal */}
+
       <Modal
-        isVisible={wateringScheduleModalVisible}
-        onBackdropPress={() => setWateringScheduleModalVisible(false)}
-        swipeDirection="down"
-        onSwipeComplete={() => setWateringScheduleModalVisible(false)}
-        style={styles.modalStyle}
-      >
-        <View style={styles.modalContent}>
-          <Text style={styles.heading}>Set Watering Schedule</Text>
-          <Text style={styles.modalText}>This is where you'll configure your watering schedule.</Text>
-          <TouchableOpacity onPress={() => setWateringScheduleModalVisible(false)} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
+  isVisible={wateringScheduleModalVisible}
+  //swipeDirection="down"
+  animationIn={'fadeIn'}
+animationOut={'fadeOut'}
+  //onSwipeComplete={() => setWateringScheduleModalVisible(false)}
+  onBackdropPress={() => setWateringScheduleModalVisible(false)}
+  style={styles.modalStyle}
+>
+  <ScrollView style={styles.wateringModalContent}>
+    <View style={styles.modalHeader}>
+      <Text style={styles.heading}>Set Custom Watering Schedule</Text>
+    </View>
+    
+
+    {/* Display Recommended Watering Schedule */}
+    <View style={styles.infoContainer}>
+      <Text style={styles.infoTitle}>Recommended Watering</Text>
+      <Text style={styles.modalText}>
+        Summer: water every {recommendedWateringSchedule?.spring_summer || 'Not set'}
+      </Text>
+      <Text style={styles.modalText}>
+        Winter: water every {recommendedWateringSchedule?.fall_winter || 'Not set'}
+      </Text>
+    </View>
+    
+    {/* Current Watering Schedule */}
+    <View style={styles.infoContainer}>
+      <Text style={styles.infoTitle}>Current Watering Schedule</Text>
+      <Text style={styles.modalText}>
+        Summer: water every {userWateringSchedule?.spring_summer || 'Not set'}
+      </Text>
+      <Text style={styles.modalText}>
+        Winter: water every {userWateringSchedule?.fall_winter || 'Not set'}
+      </Text>
+      <View style={styles.divider} />
+    
+      <Text style={styles.modalsubText}>Last watered on:</Text>
+      <Text style={styles.modalText}>
+        {lastWatered ? new Date(lastWatered).toDateString() : 'Not recorded'}
+      </Text>
+      <Text style={styles.modalsubText}>Next watering due on:</Text>
+      <Text style={styles.modalText}>
+        {nextWateringDate ? new Date(nextWateringDate).toDateString() : 'Cannot calculate'}
+      </Text>
+    </View>
+
+    {/* Custom Summer Schedule Input */}
+    <View style={styles.infoContainer}>
+      <Text style={styles.infoTitle}>Summer</Text>
+      <Text style={styles.modalsubText}>Water every</Text>
+
+      <View style={styles.row}>
+        <TextInput
+          style={styles.input}
+          placeholder=""
+          keyboardType="numeric"
+          value={customSummerFrom}
+          onChangeText={setCustomSummerFrom}
+        />
+        <Text>to</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="optional"
+          keyboardType="numeric"
+          value={customSummerTo}
+          onChangeText={setCustomSummerTo}
+        />
+        <Picker
+          selectedValue={summerUnit}
+          style={styles.picker}
+          onValueChange={(itemValue) => setSummerUnit(itemValue)}
+        >
+          <Picker.Item label="day(s)" value="day" />
+          <Picker.Item label="week(s)" value="week" />
+          <Picker.Item label="month(s)" value="month" />
+        </Picker>
+      </View>
+    </View>
+
+    {/* Custom Winter Schedule Input with Switch */}
+    <View style={styles.infoContainer}>
+      <View style={styles.winterRow}>
+        <Text style={styles.infoTitle}>Winter</Text>
+        <Switch
+          value={winterEnabled}
+          onValueChange={(value) => setWinterEnabled(value)}
+        />
+      </View>
+      {winterEnabled && (
+        <View style={styles.row}>
+      <TextInput
+            style={styles.input}
+            placeholder=""
+            keyboardType="numeric"
+            value={customWinterFrom}
+            onChangeText={setCustomWinterFrom}
+          />
+          <Text>to</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="optional"
+            keyboardType="numeric"
+            value={customWinterTo}
+            onChangeText={setCustomWinterTo}
+          />
+
+          <Picker
+            selectedValue={winterUnit}
+            style={styles.picker}
+            onValueChange={(itemValue) => setWinterUnit(itemValue)}
+          >
+            <Picker.Item label="day(s)" value="day" />
+            <Picker.Item label="week(s)" value="week" />
+            <Picker.Item label="month(s)" value="month" />
+          </Picker>
         </View>
-      </Modal>
+      )}
+    </View>
+
+    <View style={styles.winterFooter}>
+
+
+
+  </View>
+
+
+  </ScrollView>
+      {/* Action Buttons */}
+
+
+      <View style={styles.modalFooter}>
+
+      <TouchableOpacity style={styles.wateringCancelButton} onPress={() => setWateringScheduleModalVisible(false)}>
+        <Text style={styles.buttonText}>Cancel</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.wateringSaveButton} onPress={handleSaveWateringSchedule}>
+        <Text style={styles.buttonText}>Save</Text>
+      </TouchableOpacity>
+
+        </View>
+
+</Modal>
+
+
 
 
 
