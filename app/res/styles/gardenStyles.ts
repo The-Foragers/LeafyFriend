@@ -321,27 +321,19 @@ button: {
         color: theme.colors.onSurface,
         marginBottom: 5,
       },
-<<<<<<< HEAD
-      modalText: {
-        fontSize: 16, // Adjusted for readability
-        color: theme.colors.onSurface,
-        marginVertical: 2,
-        textAlign: 'left',
-      },
+
       modalsubText: {
         fontSize: 20, // Adjusted for readability
         color: theme.colors.onSurface,
         marginVertical: 2,
         textAlign: 'left',
       },
-=======
       // modalText: { duplicate of container
       //   fontSize: 16, // Adjusted for readability
       //   color: theme.colors.onSurface,
       //   marginVertical: 2,
       //   textAlign: 'left',
       // },
->>>>>>> 6a7d18d (Implemented AI chat)
       
 /* End of Modal for individual plant information*/
 
