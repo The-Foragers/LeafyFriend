@@ -2,7 +2,7 @@ import React, { useCallback, useState, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { updateUserSchedule, updateLastWatered, getImages, deleteImage, updatePlantName as updatePlantNameInDB, updatePlantImage } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
-import { Button, Menu, Provider as PaperProvider, useTheme } from 'react-native-paper';
+import { Button, Menu, Provider as PaperProvider, useTheme, IconButton } from 'react-native-paper';
 import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
 import Modal from 'react-native-modal';
 import * as ImagePicker from 'expo-image-picker';
@@ -13,6 +13,7 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 import { format, parseISO } from 'date-fns';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 
@@ -624,31 +625,45 @@ export default function GardenScreen() {
     </View>
 
     <ScrollView contentContainerStyle={styles.scrollContainer}>
-      {images.map((image, index) => (
-        <TouchableOpacity key={index} onPress={() => handleImageClick(image)}>
-          <View style={styles.plantContainer}>
-            <Image source={{ uri: image.uri }} style={styles.plantImage} />
-            <Text style={styles.plantName}>{image.name}</Text>
-            {image.daysUntilNextWatering != null ? (
-              image.daysUntilNextWatering >= 0 ? (
-                <Text style={styles.wateringInfo}>
-                  Water in {image.daysUntilNextWatering} day
-                  {image.daysUntilNextWatering !== 1 ? 's' : ''}
-                </Text>
-              ) : (
-                <Text style={styles.overdueWateringInfo}>
-                  Overdue by {Math.abs(image.daysUntilNextWatering)} day
-                  {Math.abs(image.daysUntilNextWatering) !== 1 ? 's' : ''}
-                </Text>
-              )
-            ) : (
-              <Text style={styles.wateringInfo}>Watering info not available</Text>
-            )}
-
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+  {images.map((image, index) => (
+    <TouchableOpacity key={index} onPress={() => handleImageClick(image)}>
+      <View style={styles.plantContainer}>
+        <Image source={{ uri: image.uri }} style={styles.plantImage} />
+        <View style={styles.overlayContainer}>
+          {image.daysUntilNextWatering != null && image.daysUntilNextWatering <= 999 && (
+            <View style={styles.waterDropContainer}>
+              <MaterialCommunityIcons
+                name="water"
+                style={[
+                  styles.dropIcon,
+                  { 
+                    color: image.daysUntilNextWatering > 40 ? '#16b1e9' : image.daysUntilNextWatering > 30 ? '#5bb500' : '#ff5473',
+                    fontSize: image.daysUntilNextWatering.toString().length > 2 ? 70 : image.daysUntilNextWatering.toString().length === 2 ? 60 : 50 // Adjust size based on text length
+                  }
+                ]}
+              />
+              <Text style={styles.dropText}>
+                {image.daysUntilNextWatering}
+              </Text>
+            </View>
+          )}
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedImage(image);
+              setMenuModalVisible(true);
+            }}
+            style={styles.settingsButton}
+          >
+            <Text style={styles.settingsIcon}>⋮</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.plantTitle}>
+          <Text style={styles.plantName}>{image.name}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  ))}
+</ScrollView>
 
 
 {/* Modal for full image view and plant information*/}
@@ -819,9 +834,10 @@ export default function GardenScreen() {
       <Modal
   isVisible={wateringScheduleModalVisible}
   //swipeDirection="down"
-  animationIn={'fadeIn'}
-animationOut={'fadeOut'}
   //onSwipeComplete={() => setWateringScheduleModalVisible(false)}
+  //this makes it swipe down to close I would recommend keeping it as is, it causes issues with scrolling
+  animationIn={'fadeIn'}
+  animationOut={'fadeOut'}
   onBackdropPress={() => setWateringScheduleModalVisible(false)}
   style={styles.modalStyle}
 >

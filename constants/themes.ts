@@ -135,7 +135,7 @@ export const CustomPaperDarkTheme: MD3Theme = {
     onBackground: SelectedPalette['900'],
     surface: SelectedPalette['100'],
     onSurface: SelectedPalette['900'],
-    error: '#B00020',
+    error: '#b00020',
     onError: '#FFFFFF',
     outline: SelectedPalette['400'],
     surfaceVariant: SelectedPalette['200'],

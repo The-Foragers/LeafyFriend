@@ -38,6 +38,7 @@ export const makeStyles = (theme: MD3Theme) =>
         alignItems: 'center',
         marginBottom: 10,
         elevation: 4,
+        position: 'relative', // Enable positioning for overlays
       },
 
       plantImage: {
@@ -46,10 +47,22 @@ export const makeStyles = (theme: MD3Theme) =>
         borderRadius: 15,
         marginBottom: 5,
       },
+    plantTitle: {
+      flexDirection: 'row',
+      //justifyContent: 'space-between',
+      alignItems: 'center',
+      width: '100%',
+      paddingHorizontal: 10,
+    },
     plantName: {
       fontSize: 16,
       fontWeight: 'bold',
       marginBottom: 5,
+      color: theme.colors.primary,
+    },
+    daysUntilNextWatering: {
+      fontSize: 16,
+      fontWeight: 'bold',
       color: theme.colors.primary,
     },
 
@@ -84,6 +97,64 @@ export const makeStyles = (theme: MD3Theme) =>
         padding: 10,
         backgroundColor: theme.colors.primary,
       },
+    overlayContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: 'space-between',
+    },
+    daysOverlay: {
+      //backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      color: '#fff',
+      padding: 5,
+      borderRadius: 5,
+    },
+    settingsButton: {
+      position: 'absolute',
+      top: 15,
+      //bottom: 5,
+      right: 9,
+      padding: 5,
+      borderRadius: 5,
+      backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    },
+    settingsIcon: {
+      fontSize: 24,
+      color: '#fff',
+    },
+    waterIcon: {
+      margin: 0,
+      //backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    waterDropContainer: {
+      position: 'absolute',
+      top: 10,
+      left: 5,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 25,
+      padding: 0,
+    },
+    dropBlue: {
+      backgroundColor: 'blue',
+    },
+    dropGreen: {
+      backgroundColor: '#db0028',
+    },
+    dropRed: {
+      backgroundColor: theme.colors.error,
+    },
+    dropText: {
+      position: 'absolute',
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+    dropIcon: {
+      fontSize: 40, // Increase the size
+    },
 /* End of Styles for the Garden Screen */
 
 /* Menu modal to change name, photo etc*/
