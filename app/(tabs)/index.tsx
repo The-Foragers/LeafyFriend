@@ -138,6 +138,7 @@ export default function GardenScreen() {
     family?: string;
     sunlight?: string;
     additionalCareTips?: string;//new
+    whereToBuy?: string;
   } | null>(null);
   
 //when you click a plant image
@@ -155,6 +156,7 @@ export default function GardenScreen() {
     family?: string,
     sunlight?: string,
     additionalCareTips?: string,
+    whereToBuy?: string,
   }) => {
     //console.log("Selected Image ID:", image.id); // for debugging, show the selected plant id
     setSelectedImage(image);
@@ -167,7 +169,8 @@ export default function GardenScreen() {
       scientificName: image.scientificName || 'Scientific name not available',
       family: image.family || 'Family information not available',
       sunlight: image.sunlight || 'Sunlight requirements not available',
-      additionalCareTips: image.additionalCareTips || 'Additional care tips not available' //new
+      additionalCareTips: image.additionalCareTips || 'Additional care tips not available',
+      whereToBuy: image.whereToBuy || 'Purchase information not available'
     
     });
       // Set watering schedule
@@ -731,6 +734,12 @@ export default function GardenScreen() {
   {/*<Text style={styles.modalText}>Water every: {plantInfo?.wateringValue} {plantInfo?.wateringUnit}</Text> took this out*/}
 </View>
   
+  {/* Where To Buy */}
+<View style={styles.infoContainer}>
+  <Text style={styles.infoTitle}>Where To Buy</Text>
+  <Text style={styles.modalText}>{plantInfo?.whereToBuy}</Text>
+</View>
+
   {/* Watering Info Container */}
 <View style={styles.infoContainer}>
   <Text style={styles.infoTitle}>Watering</Text>
@@ -761,6 +770,9 @@ export default function GardenScreen() {
   <Text style={styles.infoTitle}>Description</Text>
   <Text style={styles.modalText}>{plantInfo?.description}</Text>
 </View>
+
+
+
         </ScrollView>
 
         <View style={styles.modalButtonContainer}>

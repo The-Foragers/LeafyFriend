@@ -40,6 +40,7 @@ example output
   "watering_schedule":
     "spring_summer": "x-y [days/weeks/months]",
     "fall_winter": "a-b [days/weeks/months]"
+10. "whereToBuy": Any local retailers, grocery stores, or plant shops that may sell this plant.
 
 
 

@@ -23,7 +23,8 @@ export const createTable = async () => {
       additionalCareTips TEXT,
       watering_schedule TEXT,   -- Added watering_schedule field as TEXT to store JSON
       user_schedule TEXT,   -- Added user_schedule field
-      lastWatered TIMESTAMP     -- Added lastWatered field
+      lastWatered TIMESTAMP,     -- Added lastWatered field
+      whereToBuy TEXT        --Added a whereToBuy field
     );
   `);
 
@@ -74,7 +75,8 @@ export const insertImage = async (
   additionalCareTips: string,
   watering_schedule?: { spring_summer?: string; fall_winter?: string },
   user_schedule?: { spring_summer?: string; fall_winter?: string },
-  lastWatered?: string // Add lastWatered parameter
+  lastWatered?: string, // Add lastWatered parameter
+  whereToBuy: string
 ): Promise<number> => {
   const db = await dbPromise;
 
@@ -98,8 +100,9 @@ export const insertImage = async (
       additionalCareTips,
       watering_schedule,
       user_schedule,
-      lastWatered
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+      lastWatered,
+      whereToBuy
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       name,
       uri,
@@ -114,7 +117,8 @@ export const insertImage = async (
       additionalCareTips,
       wateringScheduleJSON,
       userScheduleJSON,
-      lastWatered || null // Use provided lastWatered or set to null
+      lastWatered || null, // Use provided lastWatered or set to null
+      whereToBuy
     ]
   );
 
@@ -141,7 +145,8 @@ export const getImages = async (callback: (images: {
   additionalCareTips: string,
   watering_schedule?: { spring_summer?: string; fall_winter?: string },
   user_schedule?: { spring_summer?: string; fall_winter?: string }, // Include user_schedule
-  lastWatered: string | null
+  lastWatered: string | null,
+  whereToBuy: string
 }[]) => void) => {
   const db = await dbPromise;
   const rows = await db.getAllAsync('SELECT * FROM images;');
@@ -161,6 +166,7 @@ export const getImages = async (callback: (images: {
     watering_schedule: row.watering_schedule ? JSON.parse(row.watering_schedule) : undefined,
     user_schedule: row.user_schedule ? JSON.parse(row.user_schedule) : undefined, // Parse user_schedule
     lastWatered: row.lastWatered || null,
+    whereToBuy: row.whereToBuy,
   }));
   callback(images);
 };
