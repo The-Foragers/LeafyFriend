@@ -10,6 +10,10 @@ export type PlantInfo = {
   scientificName: string;
   family: string;
   additionalCareTips: string;
+  watering_schedule?: {
+    spring_summer?: string;
+    fall_winter?: string;
+  };
 };
 
 const MAX_RETRIES = 3; // Maximum number of retries
@@ -22,13 +26,22 @@ export async function fetchPlantInfo(plantSpecies: string): Promise<PlantInfo | 
 
 Please return the response as a JSON object with the following keys:
 1. "description": A brief overview of the plant, including its common appearance and any unique characteristics.
-2. "watering": Recommended watering frequency and quantity, including any seasonal adjustments.
+2. "watering": "this is what the user will read as information, Provide a simple user friendly recommendation for watering frequency for different seasons throughout the year. include watering tips if available."
+
 3. "sunlight": Ideal lighting conditions (e.g., direct sunlight, partial shade).
 4. "poisonousToHumans": Is this plant toxic to humans? Provide details if it is.
 5. "poisonousToPets": Is this plant toxic to pets? Provide details if it is.
 6. "scientificName": The scientific name of the plant.
 7. "family": The family this plant belongs to.
 8. "additionalCareTips": Any extra tips for maintaining the plant's health, such as soil type, humidity, temperature, or common issues.
+9. "watering_schedule": An optional object with keys "spring_summer" and "fall_winter", each containing a string value that represents the recommended watering frequency for that season use 2. "watering" to fill the information. The format should be as follows:
+For days: "7-10 days", "5 days", "10 days" For weeks: "1 weeks", "1-2 weeks" For months: "1 months", "2-3 months"
+Please provide only the frequency value, without any additional words or sentences. you ca
+example output
+  "watering_schedule":
+    "spring_summer": "x-y [days/weeks/months]",
+    "fall_winter": "a-b [days/weeks/months]"
+10. "whereToBuy": Any local retailers, grocery stores, or plant shops that may sell this plant.
 
 Return only the JSON object and no additional text`;
 

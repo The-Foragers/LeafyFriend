@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const PLANTNET_API_URL = 'https://my-api.plantnet.org/v2/identify/all';
-const API_KEY = '2b10l8GSWiFjtxb9826Ux0d4u';
+const API_KEY = '2b10qbpQ769duRQ3P5kGgmEewu';
 
 export const identifyPlant = async (imageUri, organ) => {
   const formData = new FormData();
