@@ -399,6 +399,7 @@ button: {
         marginVertical: 2,
         textAlign: 'left',
       },
+
       // modalText: { duplicate of container
       //   fontSize: 16, // Adjusted for readability
       //   color: theme.colors.onSurface,
