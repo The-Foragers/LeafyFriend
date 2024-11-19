@@ -512,4 +512,76 @@ winterRow: {
   paddingBottom: 10,
 },
 
+
+settingsModalContainer: {
+  backgroundColor: 'white',
+  padding: 20,
+  borderRadius: 10,
+  // ...other styles...
+},
+modalTitleSettings: {
+  fontSize: 20,
+  fontWeight: 'bold',
+  // ...other styles...
+},
+modalSubtitle: {
+  fontSize: 16,
+  marginVertical: 10,
+  // ...other styles...
+},
+paletteContainer: {
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  justifyContent: 'space-between',
+  marginVertical: 10,
+},
+paletteOption: {
+  padding: 10,
+  borderRadius: 5,
+  backgroundColor: '#f0f0f0',
+  margin: 5,
+},
+selectedPaletteOption: {
+  borderColor: theme.colors.primary,
+  borderWidth: 2,
+},
+paletteText: {
+  fontSize: 16,
+  color: theme.colors.onPrimary, // Ensure text is readable on different background colors
+},
+modalButtonRemove: {
+  marginTop: 20,
+  paddingVertical: 10,
+  paddingHorizontal: 5,
+  backgroundColor: theme.colors.error,
+  borderRadius: 15,
+  width: '40%', // Set a specific width
+  alignSelf: 'center', // Center the button
+  // ...other styles...
+},
+modalButtonTextRemove: {
+  color: theme.colors.onError,
+  textAlign: 'center',
+  // ...other styles...
+},
+
+settingsModalButtonsContainer: {
+  marginTop: 10,
+},
+settingsModalButton: {
+  marginBottom: 15, // Add padding between buttons
+},
+
+errorContainer: {
+  backgroundColor: theme.colors.error,
+  padding: 10,
+  borderRadius: 5,
+  marginVertical: 10,
+},
+errorText: {
+  color: theme.colors.onError,
+  fontSize: 16,
+  textAlign: 'center',
+},
+
   });

@@ -179,10 +179,10 @@ export const updateLastWatered = async (id: number, lastWateredDate: string) => 
   const db = await dbPromise;
   try {
     await db.runAsync('UPDATE images SET lastWatered = ? WHERE id = ?;', [lastWateredDate, id]);
-    console.log(`Updated lastWatered for plant ID ${id}`);
+    //console.log(`Updated lastWatered for plant ID ${id}`);
     return true;
   } catch (error) {
-    console.error("Failed to update lastWatered:", error);
+    //console.error("Failed to update lastWatered:", error);
     return false;
   }
 };

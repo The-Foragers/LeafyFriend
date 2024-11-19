@@ -65,8 +65,8 @@ export default function AddPhotoScreen() {
 
 
   // Handle opening camera or gallery specific to platform
-  //ios first
   const handleAddPhotoPress = () => {
+      //ios first
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
@@ -163,10 +163,22 @@ export default function AddPhotoScreen() {
     createTable();
   }, []);
 
-  // Handle Save to Garden button press
+/**
+ * Function to handle saving the plant information and image to the garden.
+ * 
+ * This function performs the following steps:
+ * 1. Validates that both an image and plant name are provided.
+ * 2. Extracts species data or sets default values if not available.
+ * 3. Gets the current date for the last watered date.
+ * 4. Inserts the image and plant information into the database.
+ * 5. Fetches the updated list of images and navigates to the garden screen.
+ * 6. Handles any errors that occur during the save process.
+ */
   const handleSaveToGarden = async () => {
+    // Check if both image and plant name are provided
     if (image && plantName) {
       try {
+        // Extract species data or set default values if not available
         const description = speciesData?.description || 'Unknown';
         const watering = speciesData?.watering || 'Unknown';
         const poisonousToHumans = speciesData?.poisonousToHumans || 'Unknown';
@@ -211,10 +223,12 @@ export default function AddPhotoScreen() {
           navigation.navigate('index', { images }); // Navigate to the garden screen
         });
       } catch (error) {
+        // Handle any errors that occur during the save process
         console.error('Error saving to garden:', error);
         alert('An error occurred while saving to garden');
       }
     } else {
+      // Alert the user if image or plant name is missing
       alert('Please select an image and enter a plant name.');
     }
   };
@@ -289,6 +303,7 @@ useEffect(() => {
   }
 }, [plantSpecies, shouldFetchSpecies]);
 
+//No longer needed - this was used for a selection on which plant was more likely to be the correct one with confidence levels
   const renderResultSelectionModal = () => (
   <Modal
     visible={isResultModalVisible}
@@ -324,37 +339,48 @@ useEffect(() => {
              </Modal>
              );
 
- const handleIdentifyPlant = async () => {
-    if (image) {
-      setLoadingMessage('Identifying plant...');
-      try {
-        const results = await identifyPlant(image, selectedOrgan.toLowerCase());
-        if (results.results.length > 0) {
-          // Get the result with the highest confidence score
-          const highestConfidenceResult = results.results.reduce((prev: { score: number; }, current: { score: number; }) =>
-            (prev.score > current.score) ? prev : current
-          );
-          // Set the plant species, common name, and plant image to the highest confidence result
-          setPlantSpecies(highestConfidenceResult.species.scientificNameWithoutAuthor);
-          setCommonName(highestConfidenceResult.species.commonNames[0] || 'No common name');
-          setPlantImages(highestConfidenceResult.images.map((img: { url: { s: any; }; }) => img.url.s));
-          setHighestConfidence(parseFloat((highestConfidenceResult.score * 100).toFixed(2))); // Set highest confidence score
-          setCurrentImageIndex(0); // Reset to the first image
 
-          setShouldFetchSpecies(true);
-        } else {
-          setPlantSpecies('Unknown');
-          setCommonName('');
-          setPlantImages([]);
-        }
-        setLoadingMessage(null);
-      } catch (error) {
-        setLoadingMessage('Failed to identify plant');
+
+/**
+   * Function to handle identifying the plant based on the selected image.
+   * 
+   * This function performs the following steps:
+   * 1. Checks if an image is selected.
+   * 2. Sends the image to the plant identification service.
+   * 3. Processes the identification results.
+   * 4. Updates the state with the identification results.
+   * 5. Displays the result selection modal.
+   */
+const handleIdentifyPlant = async () => {
+  if (image) {
+    setLoadingMessage('Identifying plant...');
+    try {
+      const results = await identifyPlant(image, selectedOrgan.toLowerCase());
+      if (results.results.length > 0) {
+        // Get the result with the highest confidence score
+        const highestConfidenceResult = results.results.reduce((prev: { score: number; }, current: { score: number; }) =>
+          (prev.score > current.score) ? prev : current
+        );
+        // Set the plant species, common name, and plant image to the highest confidence result
+        setPlantSpecies(highestConfidenceResult.species.scientificNameWithoutAuthor);
+        setCommonName(highestConfidenceResult.species.commonNames[0] || 'No common name');
+        setPlantImages(highestConfidenceResult.images.map((img: { url: { s: any; }; }) => img.url.s));
+        setHighestConfidence(parseFloat((highestConfidenceResult.score * 100).toFixed(2))); // Set highest confidence score
+        setCurrentImageIndex(0); // Reset to the first image
+
+        setShouldFetchSpecies(true);
+      } else {
+        setPlantSpecies('Unknown');
+        setCommonName('');
+        setPlantImages([]);
       }
+      setLoadingMessage(null);
+    } catch (error) {
+      setLoadingMessage('Failed to identify plant');
     }
-  };
+  }
+};
 
-  /*Modal for organ selection and plant image routes */
   const handleNextImage = () => {
     if (plantImages.length > 0) {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % plantImages.length);
@@ -366,6 +392,9 @@ useEffect(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex - 1 + plantImages.length) % plantImages.length);
     }
   };
+
+
+  /*Modal for organ selection and plant image routes */
 
   const getImageForOrgan = (organ: string) => {
     switch (organ) {

@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { updateUserSchedule, updateLastWatered, getImages, deleteImage, updatePlantName as updatePlantNameInDB, updatePlantImage } from '@/app/utils/database';
+import { updateUserSchedule, updateLastWatered, getImages, deleteImage, updatePlantName as updatePlantNameInDB, updatePlantImage, dropTables } from '@/app/utils/database';
 import TopBar from '@/components/TopBar';
 import { Button, Menu, Provider as PaperProvider, useTheme, IconButton } from 'react-native-paper';
 import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
@@ -14,11 +14,15 @@ import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
 import { format, parseISO } from 'date-fns';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { ColorPalettes } from '@/constants/themes'; // Import color palettes
+import { usePalette } from '@/app/_layout'; // Import the usePalette hook
+import { getPaletteColor } from '@/constants/themes'; // Import the getPaletteColor function
 
 
 
 export default function GardenScreen() {
   // themes and styles and UI
+  const { selectedPalette, setSelectedPalette } = usePalette(); // Get the selected palette and setter
   const theme = useTheme();
   const styles = makeStyles(theme);
   const {width, height } = Dimensions.get('window');
@@ -71,6 +75,8 @@ export default function GardenScreen() {
   const [winterUnit, setWinterUnit] = useState('day'); // z for winter
   const [winterEnabled, setWinterEnabled] = useState(false); // toggle for winter
 
+  const [error, setError] = useState<string | null>(null);
+
   //const formattedDate = format(parseISO(dateString), 'MMMM do, yyyy');
 
   // Modals:
@@ -86,7 +92,17 @@ export default function GardenScreen() {
   const [menuModalVisible, setMenuModalVisible] = useState(false); //settings menu for each plant
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [openEditModalNext, setOpenEditModalNext] = useState(false); // Flag for opening edit modal after closing current
-  
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+
+  // Function to handle palette selection
+  const handlePaletteChange = (palette) => {
+    setSelectedPalette(palette);
+    // Apply the selected palette to the theme
+    // This will require a mechanism to update the theme dynamically
+    // For now, we'll just log the selected palette
+    //console.log(`Selected palette: ${palette}`);
+  };
+
   /*
                     Modal Functions:
   These functions are for the modals to be opened one after the other
@@ -141,7 +157,16 @@ export default function GardenScreen() {
     whereToBuy?: string;
   } | null>(null);
   
-//when you click a plant image
+/**
+ * Function to handle the event when a plant image is clicked.
+ * 
+ * This function performs the following steps:
+ * 1. Sets the selected image and displays the modal.
+ * 2. Updates the plant information state with details from the selected image.
+ * 3. Sets the recommended and user watering schedules.
+ * 4. Initializes the seasonal watering inputs.
+ * 5. Calculates and sets the next watering date based on the user schedule and last watered date.
+ */
 
   const handleImageClick = (image: { 
     id: number, // Include id
@@ -282,12 +307,18 @@ export default function GardenScreen() {
     return date.toDateString();
   };
 
-  /**
-   * Will calculate the next watering date based on the plant's watering schedule and last watered date.
-   * @param schedule 
-   * @param lastWateredDate 
-   */
-
+/**
+ * Function to calculate the next watering date based on the plant's watering schedule and last watered date.
+ * 
+ * This function performs the following steps:
+ * 1. Determines the current season (spring/summer or fall/winter).
+ * 2. Selects the appropriate watering frequency based on the season.
+ * 3. Parses the frequency to calculate the next watering date.
+ * 
+ * @param schedule - An object containing the watering schedule for spring/summer and fall/winter.
+ * @param lastWateredDate - A string representing the last date the plant was watered.
+ * @returns An object containing the beginning watering date and the due date for the next watering, or null if the schedule or last watered date is not provided.
+ */
   
   const calculateNextWateringDate = (
     schedule: { spring_summer?: string; fall_winter?: string },
@@ -314,10 +345,21 @@ export default function GardenScreen() {
     const { daysToAdd, beginningWatering, dueDate } = result;
     return { beginningWatering, dueDate };
   };
-  /*
-    * Parses a watering frequency string and returns the average number of days.
-    * @param frequency 
-    */
+
+
+/**
+ * Parses a watering frequency string and returns the average number of days.
+ * 
+ * This function performs the following steps:
+ * 1. Converts the frequency string to lowercase for uniformity.
+ * 2. Parses the last watered date and checks for validity.
+ * 3. Determines the number of days to add based on the frequency string.
+ * 4. Calculates the next watering date.
+ * 
+ * @param frequency - A string representing the watering frequency (e.g., "3-5 days", "1 week", "2 months").
+ * @param lastWateredDate - A string representing the last date the plant was watered.
+ * @returns An object containing the number of days to add, the beginning watering date, and the due date for the next watering, or null if the frequency or last watered date is not provided or invalid.
+ */
   const parseFrequencyToDays = (
     frequency: string,
     lastWateredDate: string
@@ -358,7 +400,22 @@ export default function GardenScreen() {
       ? { daysToAdd, beginningWatering, dueDate }
       : null;
   };
-  
+
+
+/**
+ * Function to handle the event when a plant is watered.
+ * 
+ * This function performs the following steps:
+ * 1. Checks if a plant image is selected.
+ * 2. Updates the last watered date in the database.
+ * 3. Updates the state with the new last watered date.
+ * 4. Calculates and sets the next watering date based on the user schedule.
+ * 5. Alerts the user that the plant has been watered.
+ * 6. Refreshes the images data to reflect the updated information.
+ * 
+ * @returns {Promise<void>}
+ */
+
   const handleWaterPlant = async () => {
     if (selectedImage) {
       try {
@@ -366,11 +423,17 @@ export default function GardenScreen() {
         await updateLastWatered(selectedImage.id, currentDate);
         setLastWatered(currentDate);
         setNextWateringDate(calculateNextWateringDate(userWateringSchedule, currentDate)?.dueDate || null);
-        alert('Plant has been watered!');
         
+        // Show success toast message
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Plant has been watered!',
+        });
+
         // Refresh images data
         refreshImagesData();
-  
+
         // Close the modal if desired
         // setModalVisible(false);
       } catch (error) {
@@ -379,52 +442,91 @@ export default function GardenScreen() {
     }
   };
 
-  const handleSaveWateringSchedule = async () => {
-    // Format summer and winter schedules with user inputs
-    const summerSchedule = customSummerTo
-      ? `${customSummerFrom}-${customSummerTo} ${summerUnit}`
-      : `${customSummerFrom} ${summerUnit}`;
-    const winterSchedule = winterEnabled
-      ? customWinterTo
-        ? `${customWinterFrom}-${customWinterTo} ${winterUnit}`
-        : `${customWinterFrom} ${winterUnit}`
-      : null;
-  
-    const userSchedule = { spring_summer: summerSchedule, fall_winter: winterSchedule };
-  
-    // Update the watering schedule state
-    setUserWateringSchedule(userSchedule);
-  
-    if (selectedImage) {
-      try {
-        await updateUserSchedule(selectedImage.id, userSchedule);
-  
-        // Recalculate next watering date with the updated user schedule
-        const nextDateInfo = calculateNextWateringDate(userSchedule, lastWatered);
-        setNextWateringDate(nextDateInfo ? nextDateInfo.dueDate : null);
-  
-        // Refresh images data
-        refreshImagesData();
-  
-        // Optionally show a success message
-        Toast.show({
-          type: 'success',
-          text1: 'Success',
-          text2: 'Watering schedule updated successfully.',
-        });
-      } catch (error) {
-        console.error('Error updating watering schedule:', error);
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Failed to update watering schedule. Please try again.',
-        });
-      }
-    } else {
-      alert('No plant selected.');
+/**
+ * Function to handle saving the custom watering schedule for a plant.
+ * 
+ * This function performs the following steps:
+ * 1. Formats the summer and winter schedules based on user inputs.
+ * 2. Updates the watering schedule state with the formatted schedules.
+ * 3. Updates the user schedule in the database for the selected plant.
+ * 4. Recalculates and sets the next watering date based on the updated user schedule.
+ * 5. Refreshes the images data to reflect the updated information.
+ * 6. Displays a success message or handles any errors that occur during the update process.
+ * 
+ * @returns {Promise<void>}
+ */
+
+const handleSaveWateringSchedule = async () => {
+  // Validate inputs
+  if (!customSummerFrom) {
+    setError('Summer "from" field is required.');
+    return;
+  }
+
+  if (customSummerTo && parseInt(customSummerTo) <= parseInt(customSummerFrom)) {
+    setError('Summer "to" field must be greater than "from" field.');
+    return;
+  }
+
+  if (winterEnabled) {
+    if (!customWinterFrom) {
+      setError('Winter "from" field is required.');
+      return;
     }
-  };
-  
+
+    if (customWinterTo && parseInt(customWinterTo) <= parseInt(customWinterFrom)) {
+      setError('Winter "to" field must be greater than "from" field.');
+      return;
+    }
+  }
+
+  setError(null); // Clear any previous errors
+
+  // Format summer and winter schedules with user inputs
+  const summerSchedule = customSummerTo
+    ? `${customSummerFrom}-${customSummerTo} ${summerUnit}`
+    : `${customSummerFrom} ${summerUnit}`;
+  const winterSchedule = winterEnabled
+    ? customWinterTo
+      ? `${customWinterFrom}-${customWinterTo} ${winterUnit}`
+      : `${customWinterFrom} ${winterUnit}`
+    : null;
+
+  const userSchedule = { spring_summer: summerSchedule, fall_winter: winterSchedule };
+
+  // Update the watering schedule state
+  setUserWateringSchedule(userSchedule);
+
+  if (selectedImage) {
+    try {
+      await updateUserSchedule(selectedImage.id, userSchedule);
+
+      // Recalculate next watering date with the updated user schedule
+      const nextDateInfo = calculateNextWateringDate(userSchedule, lastWatered);
+      setNextWateringDate(nextDateInfo ? nextDateInfo.dueDate : null);
+
+      // Refresh images data
+      refreshImagesData();
+
+      // Optionally show a success message
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Watering schedule updated successfully.',
+      });
+    } catch (error) {
+      console.error('Error updating watering schedule:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to update watering schedule. Please try again.',
+      });
+    }
+  } else {
+    alert('No plant selected.');
+  }
+};
+
     // Rename Plant Handler:
 
     // Update plant name in the database
@@ -595,14 +697,57 @@ export default function GardenScreen() {
   Buttons that still need to be implemented:
   */
   const handleSettingsPress = () => {
-    alert('Settings button pressed');
+    setSettingsModalVisible(true);
   };
 
+  // Function to handle dropping all tables with confirmation
+  const handleDropTables = async () => {
 
-  
-  
+    Alert.alert(
+      'Remove All Data',
+      'This will remove all of the data in your app, do you wish to continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          onPress: async () => {
+            setSettingsModalVisible(false); // Close the modal
 
+            try {
+              await dropTables();
+              Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'All data has been removed from the database.',
+              });
+              // Optionally, refresh the images data or reset state
+              setImages([]);
+            } catch (error) {
+              console.error('Error dropping tables:', error);
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to remove data. Please try again.',
+              });
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
+    /**
+   * The GardenScreen component renders the main UI for managing the user's garden.
+   * StyleSheet is in app/res/styles/gardenStyles.ts
+   * 
+   * This includes:
+   * 1. A top bar with a title and settings button.
+   * 2. A sort menu for sorting plant images by name or species.
+   * 3. A scrollable list of plant images, each clickable to view detailed information.
+   * 4. Modals for viewing and editing plant details, setting watering schedules, and renaming plants.
+   * 5. Various state variables and functions to handle user interactions and update the UI accordingly.
+   */
   
 
   return (
@@ -633,6 +778,7 @@ export default function GardenScreen() {
       <View style={styles.plantContainer}>
         <Image source={{ uri: image.uri }} style={styles.plantImage} />
         <View style={styles.overlayContainer}>
+          {/* set to 999 because more than 3 digits does not look good on the UI */}
           {image.daysUntilNextWatering != null && image.daysUntilNextWatering <= 999 && (
             <View style={styles.waterDropContainer}>
               <MaterialCommunityIcons
@@ -640,7 +786,7 @@ export default function GardenScreen() {
                 style={[
                   styles.dropIcon,
                   { 
-                    color: image.daysUntilNextWatering > 40 ? '#16b1e9' : image.daysUntilNextWatering > 30 ? '#5bb500' : '#ff5473',
+                    color: image.daysUntilNextWatering > 3 ? '#16b1e9' : image.daysUntilNextWatering > 0 ? '#5bb500' : '#ff5473',
                     fontSize: image.daysUntilNextWatering.toString().length > 2 ? 70 : image.daysUntilNextWatering.toString().length === 2 ? 60 : 50 // Adjust size based on text length
                   }
                 ]}
@@ -857,7 +1003,6 @@ export default function GardenScreen() {
     <View style={styles.modalHeader}>
       <Text style={styles.heading}>Set Custom Watering Schedule</Text>
     </View>
-    
 
     {/* Display Recommended Watering Schedule */}
     <View style={styles.infoContainer}>
@@ -964,28 +1109,28 @@ export default function GardenScreen() {
       )}
     </View>
 
+  {/* Display error message if any */}
+  {error && (
+    <View style={styles.errorContainer}>
+      <Text style={styles.errorText}>{error}</Text>
+    </View>
+  )}
+  
     <View style={styles.winterFooter}>
-
-
-
-  </View>
-
-
+      {/* Winter Schedule Footer */}
+    </View>
   </ScrollView>
-      {/* Action Buttons */}
 
 
-      <View style={styles.modalFooter}>
-
-      <TouchableOpacity style={styles.wateringCancelButton} onPress={() => setWateringScheduleModalVisible(false)}>
-        <Text style={styles.buttonText}>Cancel</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.wateringSaveButton} onPress={handleSaveWateringSchedule}>
-        <Text style={styles.buttonText}>Save</Text>
-      </TouchableOpacity>
-
-        </View>
-
+  {/* Action Buttons */}
+  <View style={styles.modalFooter}>
+    <TouchableOpacity style={styles.wateringCancelButton} onPress={() => setWateringScheduleModalVisible(false)}>
+      <Text style={styles.buttonText}>Cancel</Text>
+    </TouchableOpacity>
+    <TouchableOpacity style={styles.wateringSaveButton} onPress={handleSaveWateringSchedule}>
+      <Text style={styles.buttonText}>Save</Text>
+    </TouchableOpacity>
+  </View>
 </Modal>
 
 
@@ -1023,6 +1168,49 @@ export default function GardenScreen() {
         </View>
       </Modal>
       {/* End of Edit Plant Modal */}
+
+      {/* Add the Settings Modal */}
+      <Modal
+        isVisible={settingsModalVisible}
+        onBackdropPress={() => setSettingsModalVisible(false)}
+        swipeDirection="down"
+        onSwipeComplete={() => setSettingsModalVisible(false)}
+        style={styles.modalStyle}
+      >
+        <View style={styles.settingsModalContainer}>
+          <Text style={styles.modalTitleSettings}>Settings</Text>
+          <Text style={styles.modalSubtitle}>Select Theme</Text>
+          <View style={styles.paletteContainer}>
+            {Object.keys(ColorPalettes).map((palette) => (
+              <TouchableOpacity
+                key={palette}
+                style={[
+                  styles.paletteOption,
+                  { backgroundColor: getPaletteColor(palette) }, // Set background color to '500' color of the palette
+                  selectedPalette === palette && styles.selectedPaletteOption,
+                ]}
+                onPress={() => handlePaletteChange(palette)}
+              >
+                <Text style={styles.paletteText}>{palette}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.settingsModalButtonsContainer}>
+          <TouchableOpacity
+            onPress={handleDropTables}
+            style={[styles.modalButtonRemove, styles.settingsModalButton]} // Apply new button style
+          >
+            <Text style={styles.modalButtonTextRemove}>Remove All Data</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setSettingsModalVisible(false)}
+            style={styles.modalButton}
+          >
+            <Text style={styles.modalButtonText}>Close</Text>
+          </TouchableOpacity>
+        </View>
+        </View>
+      </Modal>
 
 {/* 
 End of Garden Screen 

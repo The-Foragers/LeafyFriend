@@ -1,11 +1,28 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated } from 'react-native';
-import styles from '@/app/res/styles/chatbotStyles'; 
+import { View, Animated, StyleSheet } from 'react-native';
+import { useTheme } from 'react-native-paper';
 
 const TypingIndicator = () => {
   const dot1 = useRef(new Animated.Value(0)).current;
   const dot2 = useRef(new Animated.Value(0)).current;
   const dot3 = useRef(new Animated.Value(0)).current;
+  const theme = useTheme();
+
+  const styles = StyleSheet.create({
+    typingIndicatorContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: 40, // Increased height
+    },
+    typingIndicatorDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: theme.colors.primary,
+      marginHorizontal: 5,
+    },
+  });
 
   useEffect(() => {
     const animateDot = (dot: Animated.Value, delay: number) => {

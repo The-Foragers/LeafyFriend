@@ -1,42 +1,66 @@
 # Welcome to Leafy Friends 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Leafy Friends is a mobile application designed to help plant enthusiasts manage and care for their plants. With features like plant identification, personalized care tips, and watering schedules, Leafy Friends makes plant care accessible and enjoyable.
 
-## If you'd like to contribute, here's how you can get started as a developer:
+This project is built with [Expo](https://expo.dev) and was created using [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+
+## Features
+
+- **Plant Identification**: Take a photo of a plant to identify its species and get detailed information.
+- **Garden Management**: Keep track of your plants, set custom names, and manage care schedules.
+- **Watering Reminders**: Receive notifications for watering based on customized schedules.
+- **Chatbot Assistance**: Ask questions and get advice on plant care through the integrated chatbot.
+
+## Getting Started
+
+If you'd like to contribute, here's how you can get started as a developer:
 
 1. Install dependencies
 
    ```bash
    npm install
    ```
+   or
+   ```
+   yarn install
+   ```
 
 2. Start the app
 
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+   In the output, you'll find options to open the app in an emulator or on your device using the Expo Go app.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## How to Use Leafy Friends
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. **Scan a Plant**
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+   - Open the app and navigate to the "Add Photo" tab.
+   - Tap on "Scan Plant" to take a photo or choose one from your gallery.
+   - Select the plant organ (leaf, flower, fruit, or bark) for more accurate identification.
+   - The app will identify the plant and provide detailed information.
 
-## Learn more
+2. **Manage Your Garden**
 
-To learn more about developing your project with Expo, look at the following resources:
+   - In the "Garden" tab, view all your saved plants.
+   - Tap on a plant to see its details, edit information, or set watering schedules.
+   - Customize watering schedules based on seasons and receive reminders.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+3. **Chat with the Bot**
 
-## Join the community
+   - Go to the "Chatbot" tab to ask questions about plant care.
+   - Get instant answers and advice on how to keep your plants healthy.
 
-Join our community of developers creating universal apps.
+## Contributing
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+We welcome contributions! Feel free to open issues or submit pull requests for improvements and new features.
+
+## Documentation
+
+You can find detailed documentation in the [docs](./docs) directory. This includes information on the application's architecture, components, and APIs.
+
+## License
+
+This project is licensed under the MIT License.
