@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { calculateNextWateringDate } from '@/app/utils/watering';
 
 const dbPromise = SQLite.openDatabaseAsync('garden.db');
 
@@ -13,6 +14,7 @@ export const createTable = async () => {
       name TEXT,
       uri TEXT,
       species TEXT,
+      commonName TEXT,
       description TEXT,
       watering TEXT,
       poisonousToHumans TEXT,
@@ -21,10 +23,11 @@ export const createTable = async () => {
       family TEXT,
       sunlight TEXT,
       additionalCareTips TEXT,
-      watering_schedule TEXT,   -- Added watering_schedule field as TEXT to store JSON
-      user_schedule TEXT,   -- Added user_schedule field
-      lastWatered TIMESTAMP,     -- Added lastWatered field
-      whereToBuy TEXT        --Added a whereToBuy field
+      watering_schedule TEXT, 
+      user_schedule TEXT,  
+      lastWatered TIMESTAMP,     
+      nextWateringDate TEXT,
+      whereToBuy TEXT        
     );
   `);
 
@@ -55,16 +58,16 @@ export const dropTables = async () => {
 WARNING: This will delete all data in the database
 */
 
-//dropTables();
+dropTables();
 
 
 
 // Insert an image into the database
-// Modify your insertImage function to include watering_schedule:
 export const insertImage = async (
   name: string,
   uri: string,
   species: string,
+  commonName: string,
   description: string,
   watering: string,
   poisonousToHumans: string,
@@ -75,38 +78,42 @@ export const insertImage = async (
   additionalCareTips: string,
   watering_schedule?: { spring_summer?: string; fall_winter?: string },
   user_schedule?: { spring_summer?: string; fall_winter?: string },
-  lastWatered?: string, // Add lastWatered parameter
+  lastWatered?: string,
   whereToBuy: string
 ): Promise<number> => {
   const db = await dbPromise;
 
-  // Convert schedules to JSON strings
-  const wateringScheduleJSON = watering_schedule ? JSON.stringify(watering_schedule) : null;
-  const userScheduleJSON = user_schedule ? JSON.stringify(user_schedule) : wateringScheduleJSON;
+  // Calculate the next watering date
+  const schedule = user_schedule || watering_schedule || null;
+  const today = new Date().toISOString().split('T')[0]; // Current date in YYYY-MM-DD format
+  const nextWateringInfo = calculateNextWateringDate(schedule, today);
+  const nextWateringDate = nextWateringInfo ? nextWateringInfo.dueDate : null;
 
-  // Insert the image and get the result
   const result = await db.runAsync(
     `INSERT INTO images (
-      name,
-      uri,
-      species,
-      description,
-      watering,
-      poisonousToHumans,
-      poisonousToPets,
-      scientificName,
-      family,
-      sunlight,
-      additionalCareTips,
-      watering_schedule,
-      user_schedule,
-      lastWatered,
+      name, 
+      uri, 
+      species, 
+      commonName, 
+      description, 
+      watering, 
+      poisonousToHumans, 
+      poisonousToPets, 
+      scientificName, 
+      family, 
+      sunlight, 
+      additionalCareTips, 
+      watering_schedule, 
+      user_schedule, 
+      lastWatered, 
+      nextWateringDate,
       whereToBuy
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       name,
       uri,
       species,
+      commonName,
       description,
       watering,
       poisonousToHumans,
@@ -115,18 +122,16 @@ export const insertImage = async (
       family,
       sunlight,
       additionalCareTips,
-      wateringScheduleJSON,
-      userScheduleJSON,
-      lastWatered || null, // Use provided lastWatered or set to null
+      JSON.stringify(watering_schedule),
+      JSON.stringify(user_schedule),
+      lastWatered || today,
+      nextWateringDate,
       whereToBuy
     ]
   );
 
-  // Get the last inserted ID
-  const { insertId } = result;
-  return insertId;
+  return result.insertId;
 };
-
 // Get all images from the database
 // Modify your getImages function as follows:
 
@@ -135,6 +140,7 @@ export const getImages = async (callback: (images: {
   name: string,
   uri: string,
   species: string,
+  commonName: string,
   description: string,
   watering: string,
   poisonousToHumans: string,
@@ -144,17 +150,18 @@ export const getImages = async (callback: (images: {
   sunlight: string,
   additionalCareTips: string,
   watering_schedule?: { spring_summer?: string; fall_winter?: string },
-  user_schedule?: { spring_summer?: string; fall_winter?: string }, // Include user_schedule
+  user_schedule?: { spring_summer?: string; fall_winter?: string }, 
   lastWatered: string | null,
   whereToBuy: string
 }[]) => void) => {
   const db = await dbPromise;
-  const rows = await db.getAllAsync('SELECT * FROM images;');
+  const rows: any[] = await db.getAllAsync('SELECT * FROM images;');
   const images = rows.map(row => ({
     id: row.id,
     name: row.name,
     uri: row.uri,
     species: row.species,
+    commonName: row.commonName,
     description: row.description,
     watering: row.watering,
     poisonousToHumans: row.poisonousToHumans,

@@ -199,6 +199,7 @@ export default function AddPhotoScreen() {
           plantName,
           image,
           plantSpecies || 'Unknown',
+          commonName || 'Unknown',
           description,
           watering,
           poisonousToHumans,
@@ -210,7 +211,7 @@ export default function AddPhotoScreen() {
           watering_schedule,
           user_schedule,
           currentDate,
-          whereToBuy // Pass lastWatered as current date
+          whereToBuy,
         );
   
         console.log('Image inserted successfully with lastWatered date');
@@ -544,10 +545,10 @@ StyleSheet is in app/res/styles/addPhotoStyles */
     <View style={styles.infoContainer}>
       <Text style={styles.infoTitle}>Toxicity</Text>
       <Text style={styles.modalText}>
-        {`Poisonous to Humans: ${speciesData?.poisonousToHumans|| 'unknown'}`}
+        {`Humans: ${speciesData?.poisonousToHumans|| 'unknown'}`}
       </Text>
       <Text style={styles.modalText}>
-        {`Poisonous to Pets: ${speciesData?.poisonousToPets|| 'unknown'}`}
+        {`Pets: ${speciesData?.poisonousToPets|| 'unknown'}`}
       </Text>
     </View>
 

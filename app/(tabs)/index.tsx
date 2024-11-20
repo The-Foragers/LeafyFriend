@@ -1,6 +1,7 @@
 import React, { useCallback, useState, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { updateUserSchedule, updateLastWatered, getImages, deleteImage, updatePlantName as updatePlantNameInDB, updatePlantImage, dropTables } from '@/app/utils/database';
+import { calculateNextWateringDate } from '@/app/utils/watering';
 import TopBar from '@/components/TopBar';
 import { Button, Menu, Provider as PaperProvider, useTheme, IconButton } from 'react-native-paper';
 import { makeStyles } from '@/app/res/styles/gardenStyles'; // Import the styles
@@ -12,7 +13,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Toast from 'react-native-toast-message';
-import { format, parseISO } from 'date-fns';
+import { formatDate } from '@/app/utils/formatDate';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ColorPalettes } from '@/constants/themes'; // Import color palettes
 import { usePalette } from '@/app/_layout'; // Import the usePalette hook
@@ -43,7 +44,7 @@ export default function GardenScreen() {
   const [newPlantName, setNewPlantName] = useState('');
   const [newImageUri, setNewImageUri] = useState('');
 
-  // waterring plant functions
+  // watering plant functions
   const [plantWateringSchedule, setPlantWateringSchedule] = useState<{ spring_summer?: string; fall_winter?: string } | null>(null);
   const [lastWatered, setLastWatered] = useState<string | null>(null);
   const [nextWateringDate, setNextWateringDate] = useState<string | null>(null);
@@ -151,6 +152,7 @@ export default function GardenScreen() {
     poisonousToHumans?: string;
     poisonousToPets?: string;
     scientificName?: string;
+    commonName?: string;
     family?: string;
     sunlight?: string;
     additionalCareTips?: string;//new
@@ -173,6 +175,7 @@ export default function GardenScreen() {
     name: string, 
     uri: string, 
     species: string,
+    commonName?: string,
     description?: string,
     watering?: string,
     poisonousToHumans?: string,
@@ -182,6 +185,10 @@ export default function GardenScreen() {
     sunlight?: string,
     additionalCareTips?: string,
     whereToBuy?: string,
+    watering_schedule?: { spring_summer?: string; fall_winter?: string },
+    user_schedule?: { spring_summer?: string; fall_winter?: string },
+    lastWatered?: string | null,
+    nextWateringDate?: string | null,
   }) => {
     //console.log("Selected Image ID:", image.id); // for debugging, show the selected plant id
     setSelectedImage(image);
@@ -192,6 +199,7 @@ export default function GardenScreen() {
       poisonousToHumans: image.poisonousToHumans || 'toxicity not available',
       poisonousToPets: image.poisonousToPets || 'toxicity not available',
       scientificName: image.scientificName || 'Scientific name not available',
+      commonName: image.commonName || 'Common name not available',
       family: image.family || 'Family information not available',
       sunlight: image.sunlight || 'Sunlight requirements not available',
       additionalCareTips: image.additionalCareTips || 'Additional care tips not available',
@@ -214,9 +222,10 @@ export default function GardenScreen() {
 
     // When setting lastWatered
     setLastWatered(image.lastWatered || null);
+    setNextWateringDate(image.nextWateringDate || null);
     
     // When calculating next watering date
-    const nextDateInfo = calculateNextWateringDate(userSchedule, lastWatered);
+    const nextDateInfo = userSchedule && lastWatered ? calculateNextWateringDate(userSchedule, lastWatered) : null;
     if (nextDateInfo) {
       setNextWateringDate(nextDateInfo.dueDate);
     } else {
@@ -275,131 +284,30 @@ export default function GardenScreen() {
 
   /******************** Watering Functions start here ***********/
 
-    const refreshImagesData = () => {
-    getImages((fetchedImages) => {
-      const updatedImages = fetchedImages.map((image) => {
-        const userSchedule = image.user_schedule || image.watering_schedule || null;
-        const lastWatered = image.lastWatered || null;
-        const nextWateringInfo = calculateNextWateringDate(userSchedule, lastWatered);
-        let daysUntilNextWatering = null;
-  
-        if (nextWateringInfo) {
-          const today = new Date();
-          const nextWatering = new Date(nextWateringInfo.dueDate);
-          const diffTime = nextWatering.getTime() - today.getTime();
-          daysUntilNextWatering = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        }
-  
-        return {
-          ...image,
-          nextWateringDate: nextWateringInfo ? nextWateringInfo.dueDate : null,
-          daysUntilNextWatering,
-        };
-      });
-      setImages(updatedImages);
-    });
-  };
-    const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      return 'Invalid Date';
-    }
-    return date.toDateString();
-  };
+const refreshImagesData = () => {
+  getImages((fetchedImages) => {
+    const updatedImages = fetchedImages.map((image) => {
+      const userSchedule = image.user_schedule || image.watering_schedule || null;
+      const lastWatered = image.lastWatered || null;
+      const nextWateringInfo = calculateNextWateringDate(userSchedule, lastWatered);
+      let daysUntilNextWatering = null;
 
-/**
- * Function to calculate the next watering date based on the plant's watering schedule and last watered date.
- * 
- * This function performs the following steps:
- * 1. Determines the current season (spring/summer or fall/winter).
- * 2. Selects the appropriate watering frequency based on the season.
- * 3. Parses the frequency to calculate the next watering date.
- * 
- * @param schedule - An object containing the watering schedule for spring/summer and fall/winter.
- * @param lastWateredDate - A string representing the last date the plant was watered.
- * @returns An object containing the beginning watering date and the due date for the next watering, or null if the schedule or last watered date is not provided.
- */
-  
-  const calculateNextWateringDate = (
-    schedule: { spring_summer?: string; fall_winter?: string },
-    lastWateredDate: string
-  ): { beginningWatering: string; dueDate: string } | null => {
-    if (!schedule || !lastWateredDate) return null;
-  
-    // Determine the current season
-    const month = new Date().getMonth(); // 0-11
-    const isSpringSummer = month >= 2 && month <= 7; // March to August
-    let frequency = isSpringSummer ? schedule.spring_summer : schedule.fall_winter;
-  
-    // Use spring_summer as default if fall_winter is null
-    if (!frequency) {
-      frequency = schedule.spring_summer;
-    }
-  
-    if (!frequency) return null;
-  
-    // Parse the frequency and calculate the next watering date
-    const result = parseFrequencyToDays(frequency, lastWateredDate);
-    if (!result) return null;
-  
-    const { daysToAdd, beginningWatering, dueDate } = result;
-    return { beginningWatering, dueDate };
-  };
-
-
-/**
- * Parses a watering frequency string and returns the average number of days.
- * 
- * This function performs the following steps:
- * 1. Converts the frequency string to lowercase for uniformity.
- * 2. Parses the last watered date and checks for validity.
- * 3. Determines the number of days to add based on the frequency string.
- * 4. Calculates the next watering date.
- * 
- * @param frequency - A string representing the watering frequency (e.g., "3-5 days", "1 week", "2 months").
- * @param lastWateredDate - A string representing the last date the plant was watered.
- * @returns An object containing the number of days to add, the beginning watering date, and the due date for the next watering, or null if the frequency or last watered date is not provided or invalid.
- */
-  const parseFrequencyToDays = (
-    frequency: string,
-    lastWateredDate: string
-  ): { daysToAdd: number; beginningWatering: string; dueDate: string } | null => {
-    if (!frequency || !lastWateredDate) return null;
-    frequency = frequency.toLowerCase();
-  
-    const lastWatered = new Date(lastWateredDate);
-    if (isNaN(lastWatered.getTime())) return null; // Check for invalid date
-  
-    let daysToAdd: number | null = null;
-    let beginningWatering = lastWatered.toISOString(); // ISO format
-    let dueDate: string | null = null;
-  
-    if (frequency.includes('day')) {
-      const match = frequency.match(/(\d+)(?:-(\d+))?\s*day/);
-      if (match) {
-        const minDays = parseInt(match[1], 10);
-        const maxDays = match[2] ? parseInt(match[2], 10) : minDays;
-        daysToAdd = Math.round((minDays + maxDays) / 2);
+      if (nextWateringInfo) {
+        const today = new Date();
+        const nextWatering = new Date(nextWateringInfo.dueDate);
+        const diffTime = nextWatering.getTime() - today.getTime();
+        daysUntilNextWatering = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       }
-    } else if (frequency.includes('week')) {
-      const match = frequency.match(/(\d+)?\s*week/);
-      const weeks = match[1] ? parseInt(match[1], 10) : 1;
-      daysToAdd = weeks * 7;
-    } else if (frequency.includes('month')) {
-      const match = frequency.match(/(\d+)?\s*month/);
-      const months = match[1] ? parseInt(match[1], 10) : 1;
-      daysToAdd = months * 30; // Approximate a month as 30 days
-    }
-  
-    if (daysToAdd !== null) {
-      const nextWatering = new Date(lastWatered.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
-      dueDate = nextWatering.toISOString(); // ISO format
-    }
-  
-    return daysToAdd !== null && dueDate
-      ? { daysToAdd, beginningWatering, dueDate }
-      : null;
-  };
+
+      return {
+        ...image,
+        nextWateringDate: nextWateringInfo ? nextWateringInfo.dueDate : null,
+        daysUntilNextWatering,
+      };
+    });
+    setImages(updatedImages);
+  });
+};
 
 
 /**
@@ -464,8 +372,9 @@ const handleSaveWateringSchedule = async () => {
   }
 
   if (customSummerTo && parseInt(customSummerTo) <= parseInt(customSummerFrom)) {
-    setError('Summer "to" field must be greater than "from" field.');
-    return;
+    const temp = customSummerFrom;
+    setCustomSummerFrom(customSummerTo);
+    setCustomSummerTo(temp);
   }
 
   if (winterEnabled) {
@@ -475,8 +384,9 @@ const handleSaveWateringSchedule = async () => {
     }
 
     if (customWinterTo && parseInt(customWinterTo) <= parseInt(customWinterFrom)) {
-      setError('Winter "to" field must be greater than "from" field.');
-      return;
+      const temp = customWinterFrom;
+      setCustomWinterFrom(customWinterTo);
+      setCustomWinterTo(temp);
     }
   }
 
@@ -870,6 +780,7 @@ const handleSaveWateringSchedule = async () => {
   <Text style={styles.modalText}>Species: {selectedImage.species}</Text>
   <Text style={styles.modalText}>Family: {plantInfo?.family}</Text>
   <Text style={styles.modalText}>Scientific Name: {plantInfo?.scientificName}</Text>
+  <Text style={styles.modalText}>Common Name: {plantInfo?.commonName}</Text>
 </View>
 
 {/* Care Info Container */}
@@ -896,19 +807,21 @@ const handleSaveWateringSchedule = async () => {
   <Text style={styles.modalText}>
     {lastWatered ? formatDate(lastWatered) : 'Not recorded'}
   </Text>
-  <Text style={styles.modalsubText}>Next watering due on:</Text>
+  <Text style={styles.modalsubText}>Next watering due by:</Text>
   <Text style={styles.modalText}>
-    {nextWateringDate ? formatDate(nextWateringDate) : 'Cannot calculate'}
+    {nextWateringDate ? formatDate(nextWateringDate) : 'Unknown'}
   </Text>
-
-
 </View>
 
 {/* Toxicity Info Container */}
 <View style={styles.infoContainer}>
   <Text style={styles.infoTitle}>Toxicity</Text>
-  <Text style={styles.modalText}>Humans: {plantInfo?.poisonousToHumans} </Text>
-  <Text style={styles.modalText}>Pets: {plantInfo?.poisonousToPets} </Text>
+  <Text style={styles.modalText}>
+    <Text style={{ fontWeight: 'bold' }}>Humans:</Text> {plantInfo?.poisonousToHumans}
+  </Text>
+  <Text style={styles.modalText}>
+    <Text style={{ fontWeight: 'bold' }}>Pets:</Text> {plantInfo?.poisonousToPets}
+  </Text>
 </View>
 
 {/* Description */}
@@ -1030,7 +943,7 @@ const handleSaveWateringSchedule = async () => {
       <Text style={styles.modalText}>
         {lastWatered ? new Date(lastWatered).toDateString() : 'Not recorded'}
       </Text>
-      <Text style={styles.modalsubText}>Next watering due on:</Text>
+      <Text style={styles.modalsubText}>Next watering due by:</Text>
       <Text style={styles.modalText}>
         {nextWateringDate ? new Date(nextWateringDate).toDateString() : 'Cannot calculate'}
       </Text>
