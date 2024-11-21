@@ -58,7 +58,7 @@ export const dropTables = async () => {
 WARNING: This will delete all data in the database
 */
 
-dropTables();
+///dropTables();
 
 
 
