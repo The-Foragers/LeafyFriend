@@ -303,7 +303,7 @@ button: {
         fontSize: 18,
         color: theme.colors.onSurface,
         marginTop: 10,
-        textAlign: 'center',
+        textAlign: 'left',
       },
       modalButtonContainer: {
         flexDirection: 'row',

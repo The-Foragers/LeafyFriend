@@ -221,7 +221,10 @@ export default function AddPhotoScreen() {
         getImages((images) => {
           setLoadingMessage(null);
           resetState(); // Clear the form fields
-          navigation.navigate('index', { images }); // Navigate to the garden screen
+
+          //commented out for presentation -- uncomment to navigate to garden screen
+
+          //navigation.navigate('index', { images }); // Navigate to the garden screen
         });
       } catch (error) {
         // Handle any errors that occur during the save process
@@ -482,7 +485,7 @@ StyleSheet is in app/res/styles/addPhotoStyles */
       <>
         {/* Display the preview image */}
         <Image
-          source={require('../../assets/images/LeafyFriendsLogo.jpg')}
+          source={require('../../assets/images/LeafyFriendsLogo.png')}
           style={styles.previewImage}
         />
 
