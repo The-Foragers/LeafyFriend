@@ -83,12 +83,12 @@ export const ColorPalettes = {
 };
 
 // Function to get the '500' color of a palette
-export const getPaletteColor = (palette, shade = '300') => {
+export const getPaletteColor = (palette: keyof typeof ColorPalettes, shade: keyof typeof ColorPalettes['teal'] = '300') => {
   return ColorPalettes[palette][shade];
 };
 
 // Function to create themes based on selected palette
-export const createThemes = (palette) => {
+export const createThemes = (palette: keyof typeof ColorPalettes) => {
   const SelectedPalette = ColorPalettes[palette];
 
   const CustomPaperLightTheme: MD3Theme = {

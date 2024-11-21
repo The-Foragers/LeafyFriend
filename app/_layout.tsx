@@ -8,18 +8,25 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import { createThemes } from '@/constants/themes';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 // Create a context for the selected palette
-const PaletteContext = createContext();
+const PaletteContext = createContext<{
+  selectedPalette: 'green' | 'teal' | 'pink' | 'purple' | 'amber';
+  setSelectedPalette: React.Dispatch<React.SetStateAction<'green' | 'teal' | 'pink' | 'purple' | 'amber'>>;
+}>({
+  selectedPalette: 'green',
+  setSelectedPalette: () => {}
+});
 
 export const usePalette = () => useContext(PaletteContext);
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [selectedPalette, setSelectedPalette] = useState('green');
+  const [selectedPalette, setSelectedPalette] = useState<'green' | 'teal' | 'pink' | 'purple' | 'amber'>('green');
   const [themes, setThemes] = useState(createThemes(selectedPalette));
   const { CustomPaperLightTheme, CustomPaperDarkTheme, CustomNavigationLightTheme, CustomNavigationDarkTheme } = themes;
 
@@ -34,9 +41,32 @@ export default function RootLayout() {
   }, [loaded]);
 
   useEffect(() => {
-    setThemes(createThemes(selectedPalette));
-  }, [selectedPalette]);
+    const loadPalette = async () => {
+      try {
+        const savedPalette = await AsyncStorage.getItem('selectedPalette');
+        if (savedPalette) {
+          setSelectedPalette(savedPalette as 'green' | 'teal' | 'pink' | 'purple' | 'amber');
+        }
+      } catch (error) {
+        console.error('Failed to load palette from storage', error);
+      }
+    };
 
+    loadPalette();
+  }, []);
+
+  useEffect(() => {
+    setThemes(createThemes(selectedPalette));
+    const savePalette = async () => {
+      try {
+        await AsyncStorage.setItem('selectedPalette', selectedPalette);
+      } catch (error) {
+        console.error('Failed to save palette to storage', error);
+      }
+    };
+
+    savePalette();
+  }, [selectedPalette]);
   if (!loaded) {
     return null;
   }
