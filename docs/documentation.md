@@ -25,6 +25,17 @@ You can start developing by editing the files inside the **app** directory. This
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
+# Leafy Friends
+
+This project uses various external APIs to assist with plant identification and care management.
+
+## External API Providers
+
+- **Plant Classification API**: [Pl@ntNet](https://identify.plantnet.org)
+  - Provides plant identification and classification services.
+- **Plant and Species Info API**: [Hyperbolic](https://www.hyperbolic.xyz)
+  - Provides further information through a LLM.
+
 ## Learn more
 
 To learn more about developing your project with Expo, look at the following resources:
